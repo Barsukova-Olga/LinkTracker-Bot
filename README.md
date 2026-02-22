@@ -4,31 +4,37 @@ LinkTracker – Telegram-бот, который отслеживает изме�
 Проект реализован на Spring Boot и использует Telegram Bot API
 
 ## Конфигурация
-Токен не хранится в репозитории и должен быть задан локальнo: 
+
+Токен не хранится в репозитории и должен быть задан локальнo:
 локальный конфиг или через Environment variables TELEGRAM_TOKEN=your_token_here.
 
 ### Вариант : локальный конфиг
+
 Создать файл `application-local.yaml`:
+
 ```yaml
 app:
     telegram:
         token: your_token_here
 ```
+
 В конфигурации используется `application.yaml`
 
-## Запуск приложения 
+## Запуск приложения
 
-```bash 
+```bash
 ./mvnw spring-boot:run
 ```
+
 или
-```bash 
+
+```bash
 mvn spring-boot:run
 ```
 
 ## Запуск тестов
 
-```bash 
+```bash
 ./mvnw test
 ```
 
