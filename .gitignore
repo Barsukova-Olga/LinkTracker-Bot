@@ -51,3 +51,6 @@ build/
 
 ### Mac OS ###
 .DS_Store
+
+# Private local config with secrets
+bot/src/main/resources/application-local.yml
