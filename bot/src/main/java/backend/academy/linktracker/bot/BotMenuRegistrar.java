@@ -19,7 +19,11 @@ public class BotMenuRegistrar {
 
     @PostConstruct
     public void registerCommands() {
-        bot.execute(
-                new SetMyCommands(new BotCommand("/start", "начать работу"), new BotCommand("/help", "список команд")));
+        bot.execute(new SetMyCommands(
+                new BotCommand("/start", "начать работу"),
+                new BotCommand("/help", "список команд"),
+                new BotCommand("/track", "отслеживание ссылок"),
+                new BotCommand("/untrack", "отмена отслеживание"),
+                new BotCommand("/list", "список всех ссылок, отслеживаемых пользователем")));
     }
 }

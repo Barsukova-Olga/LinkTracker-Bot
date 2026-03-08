@@ -1,6 +1,6 @@
 package backend.academy.linktracker.bot;
 
-import backend.academy.linktracker.bot.command.CommandDispatcher;
+import backend.academy.linktracker.bot.command.MessageProcessor;
 import com.pengrad.telegrambot.TelegramBot;
 import com.pengrad.telegrambot.model.Update;
 import com.pengrad.telegrambot.request.GetUpdates;
@@ -20,14 +20,14 @@ public class TelegramPollingService {
     private static final Logger log = LoggerFactory.getLogger(TelegramPollingService.class);
 
     private final TelegramBot bot;
-    private final CommandDispatcher dispatcher;
+    private final MessageProcessor messageProcessor;
 
     private final ScheduledExecutorService executor = Executors.newSingleThreadScheduledExecutor();
     private volatile int offset = 0;
 
-    public TelegramPollingService(TelegramBot bot, CommandDispatcher dispatcher) {
+    public TelegramPollingService(TelegramBot bot, MessageProcessor messageProcessor) {
         this.bot = bot;
-        this.dispatcher = dispatcher;
+        this.messageProcessor = messageProcessor;
     }
 
     @PostConstruct
@@ -65,9 +65,10 @@ public class TelegramPollingService {
             long chatId = u.message().chat().id();
             String text = u.message().text();
 
-            String string = dispatcher.dispatch(chatId, text);
-
-            bot.execute(new SendMessage(chatId, string));
+            String response = messageProcessor.process(chatId, text);
+            if (response != null && !response.isBlank()) {
+                bot.execute(new SendMessage(chatId, response));
+            }
         }
     }
 }
