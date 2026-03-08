@@ -43,7 +43,7 @@ public class ListCommandTest {
                 result);
     }
 
-    //    @Test
+    @Test
     void shouldReturnEmptyMessageWhenNoTrackedLinks() {
         ScrapperClient scrapperClient = mock(ScrapperClient.class);
         ListCommand listCommand = new ListCommand(scrapperClient);
@@ -57,7 +57,7 @@ public class ListCommandTest {
         assertEquals("Список отслеживаемых ссылок пуст", result);
     }
 
-    //    @Test
+    @Test
     void shouldReturnOnlyLinksWithRequestedTag() {
         ScrapperClient scrapperClient = mock(ScrapperClient.class);
         ListCommand listCommand = new ListCommand(scrapperClient);

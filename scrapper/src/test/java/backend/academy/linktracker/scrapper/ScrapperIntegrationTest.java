@@ -7,6 +7,7 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.HttpURLConnection;
 import java.net.URL;
+import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.web.server.LocalServerPort;
 
@@ -16,7 +17,7 @@ class ScrapperIntegrationTest {
     @LocalServerPort
     private int port;
 
-    //    @Test
+    @Test
     void registerChatAddLinkAndGetLinks() throws Exception {
         int registerStatus = sendPostWithoutBody("/tg-chat/1");
         assertEquals(200, registerStatus);
@@ -73,7 +74,7 @@ class ScrapperIntegrationTest {
         }
     }
 
-    //    @Test
+    @Test
     void registerChatAddLinkDeleteLinkAndGetEmptyList() throws Exception {
         int registerStatus = sendPostWithoutBody("/tg-chat/2");
         assertEquals(200, registerStatus);
@@ -122,7 +123,7 @@ class ScrapperIntegrationTest {
         return connection.getResponseCode();
     }
 
-    //    @Test
+    @Test
     void deleteLinkFromNonexistentChatShouldNotAffectExistingChat() throws Exception {
         int registerStatus = sendPostWithoutBody("/tg-chat/3");
         assertEquals(200, registerStatus);
@@ -157,7 +158,7 @@ class ScrapperIntegrationTest {
         assertTrue(responseBody.contains("https://github.com/openai/openai-java"));
     }
 
-    //    @Test
+    @Test
     void addLinkToNonexistentChatShouldFail() throws Exception {
         int registerStatus = sendPostWithoutBody("/tg-chat/4");
         assertEquals(200, registerStatus);
@@ -175,7 +176,7 @@ class ScrapperIntegrationTest {
         assertTrue(addStatus != 200);
     }
 
-    //    @Test
+    @Test
     void addLinkToDeletedChatShouldFail() throws Exception {
         int registerStatus = sendPostWithoutBody("/tg-chat/6");
         assertEquals(200, registerStatus);
@@ -201,7 +202,7 @@ class ScrapperIntegrationTest {
         return connection.getResponseCode();
     }
 
-    //    @Test
+    @Test
     void deleteNonexistentChatShouldReturn404() throws Exception {
         int deleteStatus = sendDeleteWithoutBody("/tg-chat/9999");
 
