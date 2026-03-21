@@ -12,7 +12,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.web.server.LocalServerPort;
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
-class ScrapperIntegrationTest {
+class ScrapperIntegrationTest extends AbstractPostgresSpringBootTest {
 
     @LocalServerPort
     private int port;

@@ -1,26 +1,8 @@
-server:
-  port: 8081
-
-spring:
-  application:
-    name: scrapper
-  datasource:
-      url: jdbc:postgresql://localhost:5432/linktracker
-      username: postgres
-      password: postgres
-      driver-class-name: org.postgresql.Driver
-
-  liquibase:
-    enabled: true
-    change-log: classpath:/migrations/master.xml
-
 app:
   bot:
     base-url: http://localhost:8080
-
   database:
     access-type: SQL
-
   schedule:
     interval: 60000
 
@@ -29,3 +11,4 @@ app:
     access-token: ${STACKOVERFLOW_ACCESS_KEY} # Use env variable. DO NOT KEEP TOKEN HERE
   github:
     token: ${GITHUB_TOKEN} # Use env variable. DO NOT KEEP TOKEN HERE
+

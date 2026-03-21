@@ -1,16 +1,17 @@
 package backend.academy.linktracker.scrapper;
 
 import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 import backend.academy.linktracker.scrapper.client.github.GithubClient;
 import backend.academy.linktracker.scrapper.client.stackoverflow.StackoverflowClient;
+import backend.academy.linktracker.scrapper.link.parser.LinkParser;
 import backend.academy.linktracker.scrapper.model.GithubParsedLink;
-import backend.academy.linktracker.scrapper.model.TrackedParsedLink;
+import backend.academy.linktracker.scrapper.model.Link;
 import backend.academy.linktracker.scrapper.schedule.DefaultLinkUpdateChecker;
 import java.net.URI;
 import java.time.Instant;
-import java.util.List;
 import java.util.Optional;
 import org.junit.jupiter.api.Test;
 
@@ -20,18 +21,21 @@ public class DefaultLinkUpdateCheckerTest {
     void shouldReturnEmptyWhenGithubClientThrowsException() {
         GithubClient githubClient = mock(GithubClient.class);
         StackoverflowClient stackoverflowClient = mock(StackoverflowClient.class);
+        LinkParser linkParser = mock(LinkParser.class);
 
-        DefaultLinkUpdateChecker checker = new DefaultLinkUpdateChecker(githubClient, stackoverflowClient);
+        DefaultLinkUpdateChecker checker = new DefaultLinkUpdateChecker(githubClient, stackoverflowClient, linkParser);
 
-        TrackedParsedLink link = new TrackedParsedLink(
+        Link link = new Link(
                 1L,
-                new GithubParsedLink(URI.create("https://github.com/openai/openai-java"), "openai", "openai-java"),
-                List.of("work"),
-                List.of(),
+                "https://github.com/openai/openai-java",
+                Instant.parse("2024-01-01T00:00:00Z"),
                 Instant.parse("2024-01-01T00:00:00Z"));
 
-        when(githubClient.getRepository((GithubParsedLink) link.parsedLink()))
-                .thenThrow(new RuntimeException("GitHub API failed"));
+        GithubParsedLink parsedLink =
+                new GithubParsedLink(URI.create("https://github.com/openai/openai-java"), "openai", "openai-java");
+
+        when(linkParser.parse(link.url())).thenReturn(Optional.of(parsedLink));
+        when(githubClient.getRepository(parsedLink)).thenThrow(new RuntimeException("GitHub API failed"));
 
         Optional<Instant> result = checker.getCurrentLastUpdatedAt(link);
 

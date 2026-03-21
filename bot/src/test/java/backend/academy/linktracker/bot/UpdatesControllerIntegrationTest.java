@@ -11,7 +11,13 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.web.server.LocalServerPort;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 
-@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
+@SpringBootTest(
+        webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT,
+        properties = {
+            "app.polling.enabled=false",
+            "spring.autoconfigure.exclude=" + "org.springframework.boot.jdbc.autoconfigure.DataSourceAutoConfiguration,"
+                    + "org.springframework.boot.hibernate.autoconfigure.HibernateJpaAutoConfiguration"
+        })
 class UpdatesControllerIntegrationTest {
 
     @LocalServerPort

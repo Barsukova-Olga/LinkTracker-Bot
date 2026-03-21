@@ -1,4 +1,4 @@
-package backend.academy.linktracker.scrapper.schedule;
+package backend.academy.linktracker.scrapper.schedule.notifier;
 
 import backend.academy.linktracker.scrapper.model.TrackedParsedLink;
 import lombok.extern.slf4j.Slf4j;

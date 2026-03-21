@@ -3,8 +3,6 @@ package backend.academy.linktracker.bot.command;
 import backend.academy.linktracker.bot.client.ScrapperClient;
 import backend.academy.linktracker.bot.dto.LinkResponse;
 import backend.academy.linktracker.bot.dto.ListLinksResponse;
-import java.util.List;
-import java.util.stream.Collectors;
 import org.springframework.stereotype.Component;
 
 @Component
@@ -23,27 +21,16 @@ public class ListCommand implements BotCommand {
 
     @Override
     public String handle(long chatId, String text) {
-        ListLinksResponse response = scrapperClient.getLinks(chatId);
+        String tag = extractTag(text);
+        System.out.println(tag);
+        ListLinksResponse response = scrapperClient.getLinks(chatId, tag);
 
         if (response == null || response.links() == null || response.links().isEmpty()) {
             return "Список отслеживаемых ссылок пуст";
         }
-        String tag = extractTag(text);
-
-        List<LinkResponse> links = response.links();
-        if (tag != null) {
-            links = links.stream()
-                    .filter(link -> link.tags() != null
-                            && link.tags().stream().anyMatch(t -> t != null && t.equalsIgnoreCase(tag)))
-                    .collect(Collectors.toList());
-        }
-
-        if (links.isEmpty()) {
-            return "Список отслеживаемых ссылок пуст";
-        }
 
         StringBuilder sb = new StringBuilder("Отслеживаемые ссылки:\n");
-        for (LinkResponse link : links) {
+        for (LinkResponse link : response.links()) {
             sb.append("- ").append(link.url()).append("\n");
         }
         return sb.toString();

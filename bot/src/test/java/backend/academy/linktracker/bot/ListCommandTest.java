@@ -32,7 +32,7 @@ public class ListCommandTest {
                                 List.of())),
                 2);
 
-        when(scrapperClient.getLinks(chatId)).thenReturn(response);
+        when(scrapperClient.getLinks(chatId, null)).thenReturn(response);
 
         String result = listCommand.handle(chatId, "/list");
 
@@ -50,7 +50,7 @@ public class ListCommandTest {
 
         long chatId = 1L;
 
-        when(scrapperClient.getLinks(chatId)).thenReturn(new ListLinksResponse(List.of(), 0));
+        when(scrapperClient.getLinks(chatId, null)).thenReturn(new ListLinksResponse(List.of(), 0));
 
         String result = listCommand.handle(chatId, "/list");
 
@@ -65,20 +65,14 @@ public class ListCommandTest {
         long chatId = 1L;
 
         ListLinksResponse response = new ListLinksResponse(
-                List.of(
-                        new LinkResponse(
-                                1L,
-                                URI.create("https://github.com/openai/openai-java"),
-                                List.of("work", "backend"),
-                                List.of()),
-                        new LinkResponse(
-                                2L,
-                                URI.create("https://stackoverflow.com/questions/11227809/test"),
-                                List.of("study"),
-                                List.of())),
-                2);
+                List.of(new LinkResponse(
+                        1L,
+                        URI.create("https://github.com/openai/openai-java"),
+                        List.of("work", "backend"),
+                        List.of())),
+                1);
 
-        when(scrapperClient.getLinks(chatId)).thenReturn(response);
+        when(scrapperClient.getLinks(chatId, "work")).thenReturn(response);
 
         String result = listCommand.handle(chatId, "/list work");
 

@@ -13,9 +13,11 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Component;
 
 @Component
+@ConditionalOnProperty(prefix = "app.polling", name = "enabled", havingValue = "true", matchIfMissing = true)
 public class TelegramPollingService {
     private static final Logger log = LoggerFactory.getLogger(TelegramPollingService.class);
 

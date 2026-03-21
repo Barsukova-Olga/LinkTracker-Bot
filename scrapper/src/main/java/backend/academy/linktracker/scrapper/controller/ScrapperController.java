@@ -14,6 +14,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
@@ -38,8 +39,9 @@ public class ScrapperController {
     }
 
     @GetMapping("/links")
-    public ResponseEntity<ListLinksResponse> getLinks(@RequestHeader("Tg-Chat-Id") long chatId) {
-        return ResponseEntity.ok(scrapperService.getLinks(chatId));
+    public ResponseEntity<ListLinksResponse> getLinks(
+            @RequestHeader("Tg-Chat-Id") long chatId, @RequestParam(required = false) String tag) {
+        return ResponseEntity.ok(scrapperService.getLinks(chatId, tag));
     }
 
     @PostMapping("/links")

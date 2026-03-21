@@ -31,7 +31,7 @@ public class UntrackCommand implements BotCommand {
             return "Укажите ссылку для удаления из отслеживания";
         }
 
-        Optional<TrackedLink> trackedLink = linkParser.parse(text);
+        Optional<TrackedLink> trackedLink = linkParser.parse(parts[1]);
 
         if (trackedLink.isEmpty()) {
             return "Ссылка некорректна. Поддерживаются GitHub и StackOverflow.";

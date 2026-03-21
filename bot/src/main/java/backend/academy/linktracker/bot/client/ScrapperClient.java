@@ -8,6 +8,7 @@ import org.springframework.http.HttpMethod;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestClient;
+import org.springframework.web.util.UriComponentsBuilder;
 
 @Component
 public class ScrapperClient {
@@ -18,10 +19,16 @@ public class ScrapperClient {
         this.restClient = scrapperRestClient;
     }
 
-    public ListLinksResponse getLinks(long chatId) {
+    public ListLinksResponse getLinks(long chatId, String tag) {
+        UriComponentsBuilder builder = UriComponentsBuilder.fromPath("/links");
+
+        if (tag != null && !tag.isBlank()) {
+            builder.queryParam("tag", tag);
+        }
+
         return restClient
                 .get()
-                .uri("/links")
+                .uri(builder.build().toUriString())
                 .header("Tg-Chat-Id", String.valueOf(chatId))
                 .retrieve()
                 .body(ListLinksResponse.class);
