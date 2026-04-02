@@ -16,6 +16,12 @@ public class GithubClientConfig {
 
     @Bean
     public RestClient githubRestClient() {
-        return RestClient.builder().baseUrl("https://api.github.com").build();
+        RestClient.Builder builder = RestClient.builder().baseUrl("https://api.github.com");
+
+        if (githubProperties.getToken() != null && !githubProperties.getToken().isBlank()) {
+            builder.defaultHeader("Authorization", "Bearer " + githubProperties.getToken());
+        }
+
+        return builder.build();
     }
 }

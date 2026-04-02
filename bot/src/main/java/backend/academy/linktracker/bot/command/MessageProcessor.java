@@ -23,7 +23,7 @@ public class MessageProcessor {
             return "";
         }
 
-        if ("/cancel,".equals(text.trim())) {
+        if ("/cancel".equals(text.trim())) {
             if (userSessionService.hasActiveSession(chatId)) {
                 return trackDialogHandler.cancel(chatId);
             }

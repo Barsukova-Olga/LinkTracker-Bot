@@ -3,6 +3,7 @@ package backend.academy.linktracker.scrapper.controller;
 import backend.academy.linktracker.scrapper.dto.ApiErrorResponse;
 import backend.academy.linktracker.scrapper.exception.ChatAlreadyExistsException;
 import backend.academy.linktracker.scrapper.exception.ChatNotFoundException;
+import backend.academy.linktracker.scrapper.exception.InvalidLinkException;
 import backend.academy.linktracker.scrapper.exception.LinkAlreadyTrackedException;
 import backend.academy.linktracker.scrapper.exception.LinkNotFoundException;
 import java.util.List;
@@ -32,6 +33,11 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(LinkAlreadyTrackedException.class)
     public ResponseEntity<ApiErrorResponse> handleLinkAlreadyTracked(LinkAlreadyTrackedException e) {
         return buildResponse(HttpStatus.CONFLICT, "Link already tracked", e);
+    }
+
+    @ExceptionHandler(InvalidLinkException.class)
+    public ResponseEntity<ApiErrorResponse> handleInvalidLink(InvalidLinkException e) {
+        return buildResponse(HttpStatus.BAD_REQUEST, "Invalid link", e);
     }
 
     private ResponseEntity<ApiErrorResponse> buildResponse(HttpStatus status, String description, RuntimeException e) {

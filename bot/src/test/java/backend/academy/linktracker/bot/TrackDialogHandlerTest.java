@@ -16,12 +16,13 @@ import backend.academy.linktracker.bot.user.UserState;
 import java.net.URI;
 import java.util.List;
 import java.util.Optional;
+import org.junit.jupiter.api.Test;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.client.HttpClientErrorException;
 
 class TrackDialogHandlerTest {
 
-    //    @Test
+    @Test
     void shouldAcceptCorrectLinkAndAskForTags() {
         UserSessionService userSessionService = mock(UserSessionService.class);
         LinkParser linkParser = mock(LinkParser.class);
@@ -44,7 +45,7 @@ class TrackDialogHandlerTest {
         verify(userSessionService).setLinkSession(chatId, uri);
     }
 
-    //    @Test
+    @Test
     void shouldSaveLinkWhenTagsAreProvided() {
         UserSessionService userSessionService = mock(UserSessionService.class);
         LinkParser linkParser = mock(LinkParser.class);
@@ -65,7 +66,7 @@ class TrackDialogHandlerTest {
         verify(userSessionService).clearSession(chatId);
     }
 
-    //    @Test
+    @Test
     void shouldRejectInvalidLink() {
         UserSessionService userSessionService = mock(UserSessionService.class);
         LinkParser linkParser = mock(LinkParser.class);
@@ -88,7 +89,7 @@ class TrackDialogHandlerTest {
         verifyNoInteractions(scrapperClient);
     }
 
-    //    @Test
+    @Test
     void shouldReturnAlreadyTrackedMessageWhenScrapperReturnsConflict() {
         UserSessionService userSessionService = mock(UserSessionService.class);
         LinkParser linkParser = mock(LinkParser.class);
