@@ -1,5 +1,6 @@
-package backend.academy.linktracker.scrapper;
+package backend.academy.linktracker.scrapper.db;
 
+import backend.academy.linktracker.scrapper.ScrapperApplication;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;

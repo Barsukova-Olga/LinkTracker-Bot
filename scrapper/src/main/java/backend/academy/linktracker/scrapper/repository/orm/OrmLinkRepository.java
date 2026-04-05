@@ -8,6 +8,7 @@ import java.time.Instant;
 import java.util.List;
 import java.util.Optional;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -45,6 +46,17 @@ public class OrmLinkRepository implements LinkRepository {
     @Override
     public List<Link> findAll() {
         return linkJpaRepository.findAll().stream().map(this::toModel).toList();
+    }
+
+    @Override
+    public List<Link> findBatch(int limit, int offset) {
+        int page = offset / limit;
+
+        return linkJpaRepository.findAll(
+                PageRequest.of(page, limit, org.springframework.data.domain.Sort.by("id"))
+            ).getContent().stream()
+            .map(this::toModel)
+            .toList();
     }
 
     @Override

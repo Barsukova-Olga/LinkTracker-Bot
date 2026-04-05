@@ -1,4 +1,4 @@
-package backend.academy.linktracker.scrapper;
+package backend.academy.linktracker.scrapper.db;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 

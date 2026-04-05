@@ -23,6 +23,8 @@ app:
 
   schedule:
     interval: 60000
+    batch-size: 100
+    threads: 4
 
   stackoverflow:
     key: ${STACKOVERFLOW_KEY} # Use env variable. DO NOT KEEP TOKEN HERE

@@ -1,5 +1,7 @@
 package backend.academy.linktracker.scrapper.properties;
 
+import jakarta.validation.constraints.Max;
+import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.Positive;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -18,4 +20,13 @@ public class ScheduleProperties {
 
     @Positive
     long interval;
+
+    @Positive
+    @Min(50)
+    @Max(500)
+    private int batchSize;
+
+    @Positive
+    @Min(1)
+    private int threads;
 }

@@ -1,4 +1,4 @@
-package backend.academy.linktracker.scrapper;
+package backend.academy.linktracker.scrapper.db;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
@@ -10,8 +10,12 @@ import backend.academy.linktracker.scrapper.repository.ChatLinkRepository;
 import backend.academy.linktracker.scrapper.repository.ChatRepository;
 import backend.academy.linktracker.scrapper.repository.LinkRepository;
 import backend.academy.linktracker.scrapper.schedule.LinkUpdateChecker;
+import backend.academy.linktracker.scrapper.service.updater.LinkUpdateEvent;
+import backend.academy.linktracker.scrapper.service.updater.LinkUpdateProcessor;
 import backend.academy.linktracker.scrapper.service.updater.LinkUpdaterService;
+import java.net.URI;
 import java.time.Instant;
+import java.util.Optional;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -38,7 +42,7 @@ class SqlLinkUpdaterServiceTest extends AbstractPostgresSpringBootTest {
     private JdbcTemplate jdbcTemplate;
 
     @MockitoBean
-    private LinkUpdateChecker linkUpdateChecker;
+    private LinkUpdateProcessor linkUpdateProcessor;
 
     @MockitoBean
     private BotClient botClient;
@@ -61,8 +65,17 @@ class SqlLinkUpdaterServiceTest extends AbstractPostgresSpringBootTest {
         Link link = linkRepository.add(url);
         chatLinkRepository.add(chatId, link.id());
 
-        when(linkUpdateChecker.getCurrentLastUpdatedAt(any(Link.class)))
-                .thenReturn(java.util.Optional.of(newUpdatedAt));
+        when(linkUpdateProcessor.process(any(Link.class)))
+            .thenReturn(Optional.of(
+                new LinkUpdateEvent(
+                    link.id(),
+                    URI.create(url),
+                    newUpdatedAt,
+                    "Issue title",
+                    "alice",
+                    "preview"
+                )
+            ));
 
         linkUpdateService.update();
 

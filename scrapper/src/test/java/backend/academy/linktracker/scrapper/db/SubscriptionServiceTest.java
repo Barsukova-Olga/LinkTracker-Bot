@@ -1,7 +1,8 @@
-package backend.academy.linktracker.scrapper;
+package backend.academy.linktracker.scrapper.db;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+import backend.academy.linktracker.scrapper.ScrapperApplication;
 import backend.academy.linktracker.scrapper.model.Link;
 import backend.academy.linktracker.scrapper.repository.LinkTagRepository;
 import backend.academy.linktracker.scrapper.service.SubscriptionService;
@@ -122,7 +123,6 @@ class SubscriptionServiceTest extends AbstractPostgresSpringBootTest {
         assertEquals(1, links1.size());
         assertEquals(1, links2.size());
 
-        // 🔥 ключевая проверка — это одна и та же ссылка
         assertEquals(links1.get(0).id(), links2.get(0).id());
     }
 

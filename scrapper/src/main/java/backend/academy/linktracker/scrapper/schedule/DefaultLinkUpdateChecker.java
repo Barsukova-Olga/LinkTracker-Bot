@@ -1,7 +1,7 @@
 package backend.academy.linktracker.scrapper.schedule;
 
 import backend.academy.linktracker.scrapper.client.github.GithubClient;
-import backend.academy.linktracker.scrapper.client.github.dto.GithubRepoResponse;
+import backend.academy.linktracker.scrapper.client.github.dto.GithubIssueResponse;
 import backend.academy.linktracker.scrapper.client.stackoverflow.StackoverflowClient;
 import backend.academy.linktracker.scrapper.client.stackoverflow.dto.StackoverflowQuestionResponse;
 import backend.academy.linktracker.scrapper.link.parser.LinkParser;
@@ -43,10 +43,10 @@ public class DefaultLinkUpdateChecker implements LinkUpdateChecker {
         if (value instanceof GithubParsedLink githubLink) {
             try {
                 log.info("Checking GitHub link: url={}", githubLink.uri());
-                GithubRepoResponse response = githubClient.getRepository(githubLink);
-                log.info("GitHub link checked: url={}, updatedAt={}", githubLink.uri(), response.updatedAt());
+                GithubIssueResponse response = githubClient.getRepository(githubLink);
+//                log.info("GitHub link checked: url={}, updatedAt={}", githubLink.uri(), response.updatedAt());updatedAt
 
-                return Optional.ofNullable(response.updatedAt());
+//                return Optional.ofNullable(response.updatedAt());
             } catch (Exception e) {
                 log.warn("Failed to check GitHub link: url={}, message={}", githubLink.uri(), e.getMessage());
                 return Optional.empty();

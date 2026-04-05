@@ -16,5 +16,7 @@ public interface LinkRepository {
 
     List<Link> findAll();
 
+    List<Link> findBatch(int limit, int offset);
+
     void updateLastUpdatedAt(long id, Instant updatedAt);
 }
