@@ -57,14 +57,9 @@ class LiquibaseMigrationTest {
     }
 
     @Test
-    void migrationsShouldBeAppliedOnCleanDatabase() throws Exception {
+    void migrationsShouldCreateAllTables() throws Exception {
         try (Connection connection =
                 DriverManager.getConnection(postgres.getJdbcUrl(), postgres.getUsername(), postgres.getPassword())) {
-            System.out.println("Tables:");
-            var rs = connection.createStatement().executeQuery("select table_name from information_schema.tables");
-            while (rs.next()) {
-                System.out.println(rs.getString(1));
-            }
 
             assertTrue(tableExists(connection, "chats"));
             assertTrue(tableExists(connection, "links"));
@@ -75,10 +70,10 @@ class LiquibaseMigrationTest {
 
     private boolean tableExists(Connection connection, String tableName) throws Exception {
         String sql = """
-            select count(*)
-            from information_schema.tables
-            where table_name = ?
-            """;
+        select count(*)
+        from information_schema.tables
+        where table_name = ? and table_schema = 'public'
+        """;
 
         try (PreparedStatement statement = connection.prepareStatement(sql)) {
             statement.setString(1, tableName);

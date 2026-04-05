@@ -1,38 +1,27 @@
-package backend.academy.linktracker.scrapper.db;
+package backend.academy.linktracker.scrapper.db.subscription;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import backend.academy.linktracker.scrapper.ScrapperApplication;
+import backend.academy.linktracker.scrapper.db.AbstractPostgresSpringBootTest;
 import backend.academy.linktracker.scrapper.model.Link;
-import backend.academy.linktracker.scrapper.repository.LinkTagRepository;
 import backend.academy.linktracker.scrapper.service.SubscriptionService;
 import java.util.List;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.core.env.Environment;
 import org.springframework.jdbc.core.JdbcTemplate;
-import org.springframework.test.context.DynamicPropertyRegistry;
-import org.springframework.test.context.DynamicPropertySource;
-import org.testcontainers.containers.PostgreSQLContainer;
-import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
 
-@Testcontainers
-@SpringBootTest(classes = ScrapperApplication.class, properties = "app.database.access-type=SQL")
-class SubscriptionServiceTest extends AbstractPostgresSpringBootTest {
+public abstract class SubscriptionServiceTest extends AbstractPostgresSpringBootTest {
+    @Autowired
+    protected SubscriptionService subscriptionService;
 
     @Autowired
-    Environment env;
-
-    @Test
-    void debug() {
-        System.out.println(env.getProperty("app.database.access-type"));
-    }
-
-    @Autowired
-    private JdbcTemplate jdbcTemplate;
+    protected JdbcTemplate jdbcTemplate;
 
     @BeforeEach
     void cleanDatabase() {
@@ -40,59 +29,6 @@ class SubscriptionServiceTest extends AbstractPostgresSpringBootTest {
         jdbcTemplate.execute("delete from chat_link");
         jdbcTemplate.execute("delete from links");
         jdbcTemplate.execute("delete from chats");
-    }
-
-    @Container
-    static PostgreSQLContainer<?> postgres = new PostgreSQLContainer<>("postgres:15")
-            .withDatabaseName("test_db")
-            .withUsername("postgres")
-            .withPassword("postgres");
-
-    @DynamicPropertySource
-    static void configureProperties(DynamicPropertyRegistry registry) {
-        registry.add("spring.datasource.url", postgres::getJdbcUrl);
-        registry.add("spring.datasource.username", postgres::getUsername);
-        registry.add("spring.datasource.password", postgres::getPassword);
-        registry.add("spring.datasource.driver-class-name", postgres::getDriverClassName);
-
-        registry.add("spring.liquibase.enabled", () -> true);
-        registry.add("spring.liquibase.change-log", () -> "classpath:/migrations/master.xml");
-    }
-
-    @Autowired
-    private SubscriptionService subscriptionService;
-
-    @Autowired
-    private LinkTagRepository linkTagRepository;
-
-    @Test
-    void shouldRemoveTagsOnUnsubscribe() {
-        long chatId = 5L;
-        String url = "https://example.com/with-tags";
-
-        Link link = subscriptionService.subscribe(chatId, url, List.of("work", "urgent"));
-
-        assertEquals(List.of("urgent", "work"), linkTagRepository.findTags(chatId, link.id()));
-
-        subscriptionService.unsubscribe(chatId, url);
-
-        assertEquals(List.of(), linkTagRepository.findTags(chatId, link.id()));
-        assertEquals(List.of(), subscriptionService.getLinks(chatId));
-    }
-
-    @Test
-    void shouldSubscribeAndSaveTags() {
-        long chatId = 1L;
-        String url = "https://github.com/openai/openai-java";
-
-        Link link = subscriptionService.subscribe(chatId, url, List.of("work", "backend"));
-
-        List<Link> links = subscriptionService.getLinks(chatId);
-        List<String> tags = linkTagRepository.findTags(chatId, link.id());
-
-        assertEquals(1, links.size());
-        assertEquals(url, links.get(0).url());
-        assertEquals(List.of("backend", "work"), tags);
     }
 
     @Test

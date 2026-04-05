@@ -30,6 +30,5 @@ public abstract class AbstractPostgresSpringBootTest {
 
         registry.add("app.bot.base-url", () -> "http://localhost:8080");
         registry.add("app.schedule.enabled", () -> "false");
-        //        registry.add("app.database.access-type", () -> "SQL");
     }
 }

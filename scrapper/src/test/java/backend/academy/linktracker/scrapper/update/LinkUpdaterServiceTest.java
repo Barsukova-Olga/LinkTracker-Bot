@@ -1,10 +1,11 @@
-package backend.academy.linktracker.scrapper.db;
+package backend.academy.linktracker.scrapper.update;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
 import backend.academy.linktracker.scrapper.client.BotClient;
+import backend.academy.linktracker.scrapper.db.AbstractPostgresSpringBootTest;
 import backend.academy.linktracker.scrapper.model.Link;
 import backend.academy.linktracker.scrapper.repository.ChatLinkRepository;
 import backend.academy.linktracker.scrapper.repository.ChatRepository;
@@ -19,32 +20,30 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.JdbcTemplate;
-import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 
-@TestPropertySource(properties = "app.database.access-type=SQL")
-class SqlLinkUpdaterServiceTest extends AbstractPostgresSpringBootTest {
+public abstract class LinkUpdaterServiceTest extends AbstractPostgresSpringBootTest {
 
     @Autowired
-    private LinkUpdaterService linkUpdateService;
+    protected LinkUpdaterService linkUpdateService;
 
     @Autowired
-    private ChatRepository chatRepository;
+    protected ChatRepository chatRepository;
 
     @Autowired
-    private LinkRepository linkRepository;
+    protected LinkRepository linkRepository;
 
     @Autowired
-    private ChatLinkRepository chatLinkRepository;
+    protected ChatLinkRepository chatLinkRepository;
 
     @Autowired
-    private JdbcTemplate jdbcTemplate;
+    protected JdbcTemplate jdbcTemplate;
 
     @MockitoBean
-    private LinkUpdateProcessor linkUpdateProcessor;
+    protected LinkUpdateProcessor linkUpdateProcessor;
 
     @MockitoBean
-    private BotClient botClient;
+    protected BotClient botClient;
 
     @BeforeEach
     void cleanDatabase() {

@@ -7,12 +7,26 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.HttpURLConnection;
 import java.net.URL;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.web.server.LocalServerPort;
+import org.springframework.jdbc.core.JdbcTemplate;
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 class ScrapperIntegrationTest extends AbstractPostgresSpringBootTest {
+
+    @Autowired
+    private JdbcTemplate jdbcTemplate;
+
+    @BeforeEach
+    void cleanDatabase() {
+        jdbcTemplate.execute("delete from link_tag");
+        jdbcTemplate.execute("delete from chat_link");
+        jdbcTemplate.execute("delete from links");
+        jdbcTemplate.execute("delete from chats");
+    }
 
     @LocalServerPort
     private int port;
@@ -22,13 +36,7 @@ class ScrapperIntegrationTest extends AbstractPostgresSpringBootTest {
         int registerStatus = sendPostWithoutBody("/tg-chat/1");
         assertEquals(200, registerStatus);
 
-        String addBody = """
-            {
-              "link": "https://github.com/openai/openai-java",
-              "tags": ["work"],
-              "filters": []
-            }
-            """;
+        String addBody = addLinkBody("https://github.com/openai/openai-java");
 
         int addStatus = sendPostWithChatId("/links", 1L, addBody);
         assertEquals(200, addStatus);
@@ -43,9 +51,106 @@ class ScrapperIntegrationTest extends AbstractPostgresSpringBootTest {
         assertTrue(responseBody.contains("https://github.com/openai/openai-java"));
     }
 
+    @Test
+    void registerChatAddLinkDeleteLinkAndGetEmptyList() throws Exception {
+        int registerStatus = sendPostWithoutBody("/tg-chat/2");
+        assertEquals(200, registerStatus);
+
+        String addBody = addLinkBody("https://github.com/openai/openai-java");
+
+        int addStatus = sendPostWithChatId("/links", 2L, addBody);
+        assertEquals(200, addStatus);
+
+        String deleteBody = removeLinkBody("https://github.com/openai/openai-java");
+
+        int deleteStatus = sendDeleteWithChatId("/links", 2L, deleteBody);
+        assertEquals(200, deleteStatus);
+
+        HttpURLConnection getConnection = createConnection("GET", "/links");
+        getConnection.setRequestProperty("Tg-Chat-Id", "2");
+
+        int getStatus = getConnection.getResponseCode();
+        String responseBody = readResponseBody(getConnection);
+
+        assertEquals(200, getStatus);
+        assertTrue(responseBody.contains("\"links\":[]")
+                || !responseBody.contains("https://github.com/openai/openai-java"));
+    }
+
+    @Test
+    void deleteLinkFromNonexistentChatShouldNotAffectExistingChat() throws Exception {
+        int registerStatus = sendPostWithoutBody("/tg-chat/3");
+        assertEquals(200, registerStatus);
+
+        String addBody = addLinkBody("https://github.com/openai/openai-java");
+
+        int addStatus = sendPostWithChatId("/links", 3L, addBody);
+        assertEquals(200, addStatus);
+
+        String deleteBody = removeLinkBody("https://github.com/openai/openai-java");
+
+        int deleteStatus = sendDeleteWithChatId("/links", 999L, deleteBody);
+        assertTrue(deleteStatus != 200);
+
+        HttpURLConnection getConnection = createConnection("GET", "/links");
+        getConnection.setRequestProperty("Tg-Chat-Id", "3");
+
+        int getStatus = getConnection.getResponseCode();
+        String responseBody = readResponseBody(getConnection);
+
+        assertEquals(200, getStatus);
+        assertTrue(responseBody.contains("https://github.com/openai/openai-java"));
+    }
+
+    @Test
+    void addLinkToNonexistentChatShouldFail() throws Exception {
+        int registerStatus = sendPostWithoutBody("/tg-chat/4");
+        assertEquals(200, registerStatus);
+
+        String addBody = addLinkBody("https://github.com/openai/openai-java");
+
+        int addStatus = sendPostWithChatId("/links", 5L, addBody);
+
+        assertTrue(addStatus != 200);
+    }
+
+    @Test
+    void addLinkToDeletedChatShouldFail() throws Exception {
+        int registerStatus = sendPostWithoutBody("/tg-chat/6");
+        assertEquals(200, registerStatus);
+
+        int deleteChatStatus = sendDeleteWithoutBody("/tg-chat/6");
+        assertEquals(200, deleteChatStatus);
+
+        String addBody = addLinkBody("https://github.com/openai/openai-java");
+
+        int addStatus = sendPostWithChatId("/links", 6L, addBody);
+
+        assertTrue(addStatus != 200);
+    }
+
+    @Test
+    void deleteNonexistentChatShouldReturn404() throws Exception {
+        int deleteStatus = sendDeleteWithoutBody("/tg-chat/9999");
+
+        assertEquals(404, deleteStatus);
+    }
+
     private int sendPostWithoutBody(String path) throws Exception {
         HttpURLConnection connection = createConnection("POST", path);
         return connection.getResponseCode();
+    }
+
+    @Test
+    void addInvalidLinkShouldReturn400() throws Exception {
+        int registerStatus = sendPostWithoutBody("/tg-chat/7");
+        assertEquals(200, registerStatus);
+
+        String addBody = addLinkBody("not-a-valid-link");
+
+        int addStatus = sendPostWithChatId("/links", 7L, addBody);
+
+        assertEquals(400, addStatus);
     }
 
     private int sendPostWithChatId(String path, long chatId, String body) throws Exception {
@@ -74,42 +179,6 @@ class ScrapperIntegrationTest extends AbstractPostgresSpringBootTest {
         }
     }
 
-    @Test
-    void registerChatAddLinkDeleteLinkAndGetEmptyList() throws Exception {
-        int registerStatus = sendPostWithoutBody("/tg-chat/2");
-        assertEquals(200, registerStatus);
-
-        String addBody = """
-        {
-          "link": "https://github.com/openai/openai-java",
-          "tags": ["work"],
-          "filters": []
-        }
-        """;
-
-        int addStatus = sendPostWithChatId("/links", 2L, addBody);
-        assertEquals(200, addStatus);
-
-        String deleteBody = """
-        {
-          "link": "https://github.com/openai/openai-java"
-        }
-        """;
-
-        int deleteStatus = sendDeleteWithChatId("/links", 2L, deleteBody);
-        assertEquals(200, deleteStatus);
-
-        HttpURLConnection getConnection = createConnection("GET", "/links");
-        getConnection.setRequestProperty("Tg-Chat-Id", "2");
-
-        int getStatus = getConnection.getResponseCode();
-        String responseBody = readResponseBody(getConnection);
-
-        assertEquals(200, getStatus);
-        assertTrue(responseBody.contains("\"links\":[]")
-                || !responseBody.contains("https://github.com/openai/openai-java"));
-    }
-
     private int sendDeleteWithChatId(String path, long chatId, String body) throws Exception {
         HttpURLConnection connection = createConnection("DELETE", path);
         connection.setRequestProperty("Tg-Chat-Id", String.valueOf(chatId));
@@ -123,89 +192,26 @@ class ScrapperIntegrationTest extends AbstractPostgresSpringBootTest {
         return connection.getResponseCode();
     }
 
-    @Test
-    void deleteLinkFromNonexistentChatShouldNotAffectExistingChat() throws Exception {
-        int registerStatus = sendPostWithoutBody("/tg-chat/3");
-        assertEquals(200, registerStatus);
-
-        String addBody = """
-        {
-          "link": "https://github.com/openai/openai-java",
-          "tags": ["work"],
-          "filters": []
-        }
-        """;
-
-        int addStatus = sendPostWithChatId("/links", 3L, addBody);
-        assertEquals(200, addStatus);
-
-        String deleteBody = """
-        {
-          "link": "https://github.com/openai/openai-java"
-        }
-        """;
-
-        int deleteStatus = sendDeleteWithChatId("/links", 999L, deleteBody);
-        assertTrue(deleteStatus != 200);
-
-        HttpURLConnection getConnection = createConnection("GET", "/links");
-        getConnection.setRequestProperty("Tg-Chat-Id", "3");
-
-        int getStatus = getConnection.getResponseCode();
-        String responseBody = readResponseBody(getConnection);
-
-        assertEquals(200, getStatus);
-        assertTrue(responseBody.contains("https://github.com/openai/openai-java"));
-    }
-
-    @Test
-    void addLinkToNonexistentChatShouldFail() throws Exception {
-        int registerStatus = sendPostWithoutBody("/tg-chat/4");
-        assertEquals(200, registerStatus);
-
-        String addBody = """
-        {
-          "link": "https://github.com/openai/openai-java",
-          "tags": ["work"],
-          "filters": []
-        }
-        """;
-
-        int addStatus = sendPostWithChatId("/links", 5L, addBody);
-
-        assertTrue(addStatus != 200);
-    }
-
-    @Test
-    void addLinkToDeletedChatShouldFail() throws Exception {
-        int registerStatus = sendPostWithoutBody("/tg-chat/6");
-        assertEquals(200, registerStatus);
-
-        int deleteChatStatus = sendDeleteWithoutBody("/tg-chat/6");
-        assertEquals(200, deleteChatStatus);
-
-        String addBody = """
-        {
-          "link": "https://github.com/openai/openai-java",
-          "tags": ["work"],
-          "filters": []
-        }
-        """;
-
-        int addStatus = sendPostWithChatId("/links", 6L, addBody);
-
-        assertTrue(addStatus != 200);
-    }
-
     private int sendDeleteWithoutBody(String path) throws Exception {
         HttpURLConnection connection = createConnection("DELETE", path);
         return connection.getResponseCode();
     }
 
-    @Test
-    void deleteNonexistentChatShouldReturn404() throws Exception {
-        int deleteStatus = sendDeleteWithoutBody("/tg-chat/9999");
+    private String addLinkBody(String url) {
+        return """
+        {
+          "link": "%s",
+          "tags": ["work"],
+          "filters": []
+        }
+        """.formatted(url);
+    }
 
-        assertEquals(404, deleteStatus);
+    private String removeLinkBody(String url) {
+        return """
+        {
+          "link": "%s"
+        }
+        """.formatted(url);
     }
 }
