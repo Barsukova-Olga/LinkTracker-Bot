@@ -2,15 +2,12 @@ package backend.academy.linktracker.scrapper.db.subscription;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-import backend.academy.linktracker.scrapper.ScrapperApplication;
 import backend.academy.linktracker.scrapper.model.Link;
 import backend.academy.linktracker.scrapper.repository.LinkTagRepository;
 import java.util.List;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.TestPropertySource;
-import org.testcontainers.junit.jupiter.Testcontainers;
 
 @TestPropertySource(properties = {"app.database.access-type=SQL", "app.schedule.enabled=false"})
 class SqlSubscriptionServiceTest extends SubscriptionServiceTest {
