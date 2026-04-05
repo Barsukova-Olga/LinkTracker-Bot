@@ -52,11 +52,12 @@ public class OrmLinkRepository implements LinkRepository {
     public List<Link> findBatch(int limit, int offset) {
         int page = offset / limit;
 
-        return linkJpaRepository.findAll(
-                PageRequest.of(page, limit, org.springframework.data.domain.Sort.by("id"))
-            ).getContent().stream()
-            .map(this::toModel)
-            .toList();
+        return linkJpaRepository
+                .findAll(PageRequest.of(page, limit, org.springframework.data.domain.Sort.by("id")))
+                .getContent()
+                .stream()
+                .map(this::toModel)
+                .toList();
     }
 
     @Override

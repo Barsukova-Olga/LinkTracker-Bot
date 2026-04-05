@@ -9,7 +9,6 @@ import backend.academy.linktracker.scrapper.model.Link;
 import backend.academy.linktracker.scrapper.repository.ChatLinkRepository;
 import backend.academy.linktracker.scrapper.repository.ChatRepository;
 import backend.academy.linktracker.scrapper.repository.LinkRepository;
-import backend.academy.linktracker.scrapper.schedule.LinkUpdateChecker;
 import backend.academy.linktracker.scrapper.service.updater.LinkUpdateEvent;
 import backend.academy.linktracker.scrapper.service.updater.LinkUpdateProcessor;
 import backend.academy.linktracker.scrapper.service.updater.LinkUpdaterService;
@@ -66,16 +65,8 @@ class SqlLinkUpdaterServiceTest extends AbstractPostgresSpringBootTest {
         chatLinkRepository.add(chatId, link.id());
 
         when(linkUpdateProcessor.process(any(Link.class)))
-            .thenReturn(Optional.of(
-                new LinkUpdateEvent(
-                    link.id(),
-                    URI.create(url),
-                    newUpdatedAt,
-                    "Issue title",
-                    "alice",
-                    "preview"
-                )
-            ));
+                .thenReturn(Optional.of(new LinkUpdateEvent(
+                        link.id(), URI.create(url), newUpdatedAt, "Issue title", "alice", "preview")));
 
         linkUpdateService.update();
 

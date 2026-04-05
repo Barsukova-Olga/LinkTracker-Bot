@@ -16,7 +16,6 @@ import java.util.concurrent.atomic.AtomicInteger;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @Slf4j
@@ -28,7 +27,6 @@ public class DefaultLinkUpdaterService implements LinkUpdaterService {
     private final LinkUpdateProcessor linkUpdateProcessor;
     private final BotClient botClient;
     private final ScheduleProperties scheduleProperties;
-
 
     @Override
     public LinkUpdateReport update() {
@@ -70,7 +68,8 @@ public class DefaultLinkUpdaterService implements LinkUpdaterService {
         return new LinkUpdateReport(totalProcessed.get(), totalUpdated.get(), failedLinks);
     }
 
-    private void processChunk(List<Link> chunk, AtomicInteger totalProcessed, AtomicInteger totalUpdated,List<String> failedLinks) {
+    private void processChunk(
+            List<Link> chunk, AtomicInteger totalProcessed, AtomicInteger totalUpdated, List<String> failedLinks) {
         for (Link link : chunk) {
             totalProcessed.incrementAndGet();
             try {
@@ -80,27 +79,21 @@ public class DefaultLinkUpdaterService implements LinkUpdaterService {
                     continue;
                 }
 
-                LinkUpdateEvent linkUpdateEvent = currentUpdated.get();
+                LinkUpdateEvent linkUpdateEvent = currentUpdated.orElseThrow();
 
                 linkRepository.updateLastUpdatedAt(link.id(), linkUpdateEvent.occurredAt());
 
                 List<Long> chatIds = chatLinkRepository.findChatsByLinkId(link.id());
 
                 if (!chatIds.isEmpty()) {
-                    String description = """
-                        %s
-                        Автор: %s
-                        Время: %s
-
-                        %s
-                        """.formatted(
-                        nullToDefault(linkUpdateEvent.title(), "Новое обновление"),
-                        nullToDefault(linkUpdateEvent.author(), "Неизвестный автор"),
-                        linkUpdateEvent.occurredAt(),
-                        nullToDefault(linkUpdateEvent.preview(), "Превью отсутствует")
-                    );
-                    botClient.sendUpdate(
-                        new LinkUpdateRequest(linkUpdateEvent.linkId(), linkUpdateEvent.url(), description, chatIds));
+                    String description = "%s%nАвтор: %s%nВремя: %s%n%n%s"
+                            .formatted(
+                                    nullToDefault(linkUpdateEvent.title(), "Новое обновление"),
+                                    nullToDefault(linkUpdateEvent.author(), "Неизвестный автор"),
+                                    linkUpdateEvent.occurredAt(),
+                                    nullToDefault(linkUpdateEvent.preview(), "Превью отсутствует"));
+                    botClient.sendUpdate(new LinkUpdateRequest(
+                            linkUpdateEvent.linkId(), linkUpdateEvent.url(), description, chatIds));
                     totalUpdated.incrementAndGet();
                 }
             } catch (Exception e) {
@@ -108,7 +101,6 @@ public class DefaultLinkUpdaterService implements LinkUpdaterService {
                 log.warn("Failed to process link {}: {}", link.url(), e.getMessage());
             }
         }
-
     }
 
     private List<List<Link>> split(List<Link> links, int threads) {
@@ -125,7 +117,6 @@ public class DefaultLinkUpdaterService implements LinkUpdaterService {
         }
 
         return result;
-
     }
 
     private String nullToDefault(String value, String defaultValue) {

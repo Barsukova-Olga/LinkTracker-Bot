@@ -1,7 +1,5 @@
 package backend.academy.linktracker.scrapper.update;
 
-
-
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertIterableEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -25,10 +23,6 @@ import backend.academy.linktracker.scrapper.service.updater.DefaultLinkUpdaterSe
 import backend.academy.linktracker.scrapper.service.updater.LinkUpdateEvent;
 import backend.academy.linktracker.scrapper.service.updater.LinkUpdateProcessor;
 import backend.academy.linktracker.scrapper.service.updater.LinkUpdateReport;
-import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
-import org.mockito.ArgumentCaptor;
 import java.net.URI;
 import java.time.Instant;
 import java.util.List;
@@ -38,7 +32,9 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
-
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.mockito.ArgumentCaptor;
 
 public class DefaultLinkUpdaterServiceTest {
 
@@ -58,41 +54,27 @@ public class DefaultLinkUpdaterServiceTest {
         scheduleProperties = mock(ScheduleProperties.class);
 
         service = new DefaultLinkUpdaterService(
-            linkRepository,
-            chatLinkRepository,
-            linkUpdateProcessor,
-            botClient,
-            scheduleProperties
-        );
+                linkRepository, chatLinkRepository, linkUpdateProcessor, botClient, scheduleProperties);
     }
-
-
 
     @Test
     void shouldBuildGithubIssueMessageWithTitleAuthorAndPreview() {
         when(scheduleProperties.getBatchSize()).thenReturn(50);
         when(scheduleProperties.getThreads()).thenReturn(1);
 
-        Link link = new Link(
-            1L,
-            "https://github.com/openai/openai-java",
-            null,
-            Instant.now()
-        );
+        Link link = new Link(1L, "https://github.com/openai/openai-java", null, Instant.now());
 
         when(linkRepository.findBatch(50, 0)).thenReturn(List.of(link));
         when(linkRepository.findBatch(50, 50)).thenReturn(List.of());
 
-        when(linkUpdateProcessor.process(link)).thenReturn(Optional.of(
-            new LinkUpdateEvent(
-                1L,
-                URI.create(link.url()),
-                Instant.parse("2026-01-01T10:00:00Z"),
-                "New issue title",
-                "alice",
-                "Issue preview text"
-            )
-        ));
+        when(linkUpdateProcessor.process(link))
+                .thenReturn(Optional.of(new LinkUpdateEvent(
+                        1L,
+                        URI.create(link.url()),
+                        Instant.parse("2026-01-01T10:00:00Z"),
+                        "New issue title",
+                        "alice",
+                        "Issue preview text")));
 
         when(chatLinkRepository.findChatsByLinkId(1L)).thenReturn(List.of(101L));
 
@@ -113,26 +95,19 @@ public class DefaultLinkUpdaterServiceTest {
         when(scheduleProperties.getBatchSize()).thenReturn(50);
         when(scheduleProperties.getThreads()).thenReturn(1);
 
-        Link link = new Link(
-            2L,
-            "https://stackoverflow.com/questions/11227809",
-            null,
-            Instant.now()
-        );
+        Link link = new Link(2L, "https://stackoverflow.com/questions/11227809", null, Instant.now());
 
         when(linkRepository.findBatch(50, 0)).thenReturn(List.of(link));
         when(linkRepository.findBatch(50, 50)).thenReturn(List.of());
 
-        when(linkUpdateProcessor.process(link)).thenReturn(Optional.of(
-            new LinkUpdateEvent(
-                2L,
-                URI.create(link.url()),
-                Instant.parse("2026-01-02T12:30:00Z"),
-                "How to reverse a string in Java?",
-                "Bob Smith",
-                "You can use StringBuilder and call reverse()."
-            )
-        ));
+        when(linkUpdateProcessor.process(link))
+                .thenReturn(Optional.of(new LinkUpdateEvent(
+                        2L,
+                        URI.create(link.url()),
+                        Instant.parse("2026-01-02T12:30:00Z"),
+                        "How to reverse a string in Java?",
+                        "Bob Smith",
+                        "You can use StringBuilder and call reverse().")));
 
         when(chatLinkRepository.findChatsByLinkId(2L)).thenReturn(List.of(202L));
 
@@ -153,36 +128,23 @@ public class DefaultLinkUpdaterServiceTest {
         when(scheduleProperties.getBatchSize()).thenReturn(2);
         when(scheduleProperties.getThreads()).thenReturn(1);
 
-        Link failedLink = new Link(
-            1L,
-            "https://github.com/openai/openai-java",
-            null,
-            Instant.now()
-        );
+        Link failedLink = new Link(1L, "https://github.com/openai/openai-java", null, Instant.now());
 
-        Link okLink = new Link(
-            2L,
-            "https://stackoverflow.com/questions/11227809",
-            null,
-            Instant.now()
-        );
+        Link okLink = new Link(2L, "https://stackoverflow.com/questions/11227809", null, Instant.now());
 
         when(linkRepository.findBatch(2, 0)).thenReturn(List.of(failedLink, okLink));
         when(linkRepository.findBatch(2, 2)).thenReturn(List.of());
 
-        when(linkUpdateProcessor.process(failedLink))
-            .thenThrow(new RuntimeException("External API unavailable"));
+        when(linkUpdateProcessor.process(failedLink)).thenThrow(new RuntimeException("External API unavailable"));
 
-        when(linkUpdateProcessor.process(okLink)).thenReturn(Optional.of(
-            new LinkUpdateEvent(
-                2L,
-                URI.create(okLink.url()),
-                Instant.parse("2026-01-02T12:30:00Z"),
-                "How to reverse a string in Java?",
-                "Bob Smith",
-                "You can use StringBuilder and call reverse()."
-            )
-        ));
+        when(linkUpdateProcessor.process(okLink))
+                .thenReturn(Optional.of(new LinkUpdateEvent(
+                        2L,
+                        URI.create(okLink.url()),
+                        Instant.parse("2026-01-02T12:30:00Z"),
+                        "How to reverse a string in Java?",
+                        "Bob Smith",
+                        "You can use StringBuilder and call reverse().")));
 
         when(chatLinkRepository.findChatsByLinkId(2L)).thenReturn(List.of(202L));
 
@@ -204,33 +166,23 @@ public class DefaultLinkUpdaterServiceTest {
         LinkParser linkParser = mock(LinkParser.class);
 
         DefaultLinkUpdateProcessor processor =
-            new DefaultLinkUpdateProcessor(githubClient, stackoverflowClient, linkParser);
+                new DefaultLinkUpdateProcessor(githubClient, stackoverflowClient, linkParser);
 
-        Link link = new Link(
-            1L,
-            "https://github.com/openai/openai-java",
-            null,
-            Instant.now()
-        );
+        Link link = new Link(1L, "https://github.com/openai/openai-java", null, Instant.now());
 
-        GithubParsedLink parsedLink = new GithubParsedLink(
-            URI.create(link.url()),
-            "openai",
-            "openai-java"
-        );
+        GithubParsedLink parsedLink = new GithubParsedLink(URI.create(link.url()), "openai", "openai-java");
 
         String longBody = "a".repeat(250);
 
         when(linkParser.parse(link.url())).thenReturn(Optional.of(parsedLink));
         when(githubClient.getIssues(parsedLink)).thenReturn(new GithubIssueResponse[] {
             new GithubIssueResponse(
-                1L,
-                "Issue title",
-                longBody,
-                new GithubUserResponse("alice"),
-                Instant.parse("2026-01-01T10:00:00Z"),
-                null
-            )
+                    1L,
+                    "Issue title",
+                    longBody,
+                    new GithubUserResponse("alice"),
+                    Instant.parse("2026-01-01T10:00:00Z"),
+                    null)
         });
 
         Optional<LinkUpdateEvent> result = processor.process(link);
@@ -239,11 +191,11 @@ public class DefaultLinkUpdaterServiceTest {
         assertEquals(200, result.get().preview().length());
         assertEquals("a".repeat(200), result.get().preview());
     }
+
     @Test
     void shouldProcessLinksInBatches() {
         when(scheduleProperties.getBatchSize()).thenReturn(2);
         when(scheduleProperties.getThreads()).thenReturn(1);
-
 
         Link link1 = new Link(1L, "https://github.com/a/b", null, Instant.now());
         Link link2 = new Link(2L, "https://github.com/c/d", null, Instant.now());
@@ -253,38 +205,32 @@ public class DefaultLinkUpdaterServiceTest {
         when(linkRepository.findBatch(2, 2)).thenReturn(List.of(link3));
         when(linkRepository.findBatch(2, 4)).thenReturn(List.of());
 
-        when(linkUpdateProcessor.process(link1)).thenReturn(Optional.of(
-            new LinkUpdateEvent(
-                1L,
-                URI.create(link1.url()),
-                Instant.parse("2026-01-01T10:00:00Z"),
-                "Issue 1",
-                "alice",
-                "preview 1"
-            )
-        ));
+        when(linkUpdateProcessor.process(link1))
+                .thenReturn(Optional.of(new LinkUpdateEvent(
+                        1L,
+                        URI.create(link1.url()),
+                        Instant.parse("2026-01-01T10:00:00Z"),
+                        "Issue 1",
+                        "alice",
+                        "preview 1")));
 
-        when(linkUpdateProcessor.process(link2)).thenReturn(Optional.of(
-            new LinkUpdateEvent(
-                2L,
-                URI.create(link2.url()),
-                Instant.parse("2026-01-01T11:00:00Z"),
-                "Issue 2",
-                "bob",
-                "preview 2"
-            )
-        ));
+        when(linkUpdateProcessor.process(link2))
+                .thenReturn(Optional.of(new LinkUpdateEvent(
+                        2L,
+                        URI.create(link2.url()),
+                        Instant.parse("2026-01-01T11:00:00Z"),
+                        "Issue 2",
+                        "bob",
+                        "preview 2")));
 
-        when(linkUpdateProcessor.process(link3)).thenReturn(Optional.of(
-            new LinkUpdateEvent(
-                3L,
-                URI.create(link3.url()),
-                Instant.parse("2026-01-01T12:00:00Z"),
-                "Answer 1",
-                "charlie",
-                "preview 3"
-            )
-        ));
+        when(linkUpdateProcessor.process(link3))
+                .thenReturn(Optional.of(new LinkUpdateEvent(
+                        3L,
+                        URI.create(link3.url()),
+                        Instant.parse("2026-01-01T12:00:00Z"),
+                        "Answer 1",
+                        "charlie",
+                        "preview 3")));
 
         when(chatLinkRepository.findChatsByLinkId(1L)).thenReturn(List.of(101L));
         when(chatLinkRepository.findChatsByLinkId(2L)).thenReturn(List.of(102L));
@@ -307,12 +253,10 @@ public class DefaultLinkUpdaterServiceTest {
         verify(botClient, times(3)).sendUpdate(any(LinkUpdateRequest.class));
     }
 
-
     @Test
     void shouldContinueProcessingWhenOneLinkHasNoUpdate() {
         when(scheduleProperties.getBatchSize()).thenReturn(3);
         when(scheduleProperties.getThreads()).thenReturn(1);
-
 
         Link link1 = new Link(1L, "https://github.com/a/b", null, Instant.now());
         Link link2 = new Link(2L, "https://github.com/c/d", null, Instant.now());
@@ -323,27 +267,23 @@ public class DefaultLinkUpdaterServiceTest {
 
         when(linkUpdateProcessor.process(link1)).thenReturn(Optional.empty());
 
-        when(linkUpdateProcessor.process(link2)).thenReturn(Optional.of(
-            new LinkUpdateEvent(
-                2L,
-                URI.create(link2.url()),
-                Instant.parse("2026-01-01T11:00:00Z"),
-                "Issue 2",
-                "bob",
-                "preview 2"
-            )
-        ));
+        when(linkUpdateProcessor.process(link2))
+                .thenReturn(Optional.of(new LinkUpdateEvent(
+                        2L,
+                        URI.create(link2.url()),
+                        Instant.parse("2026-01-01T11:00:00Z"),
+                        "Issue 2",
+                        "bob",
+                        "preview 2")));
 
-        when(linkUpdateProcessor.process(link3)).thenReturn(Optional.of(
-            new LinkUpdateEvent(
-                3L,
-                URI.create(link3.url()),
-                Instant.parse("2026-01-01T12:00:00Z"),
-                "Answer 1",
-                "charlie",
-                "preview 3"
-            )
-        ));
+        when(linkUpdateProcessor.process(link3))
+                .thenReturn(Optional.of(new LinkUpdateEvent(
+                        3L,
+                        URI.create(link3.url()),
+                        Instant.parse("2026-01-01T12:00:00Z"),
+                        "Answer 1",
+                        "charlie",
+                        "preview 3")));
 
         when(chatLinkRepository.findChatsByLinkId(2L)).thenReturn(List.of(102L));
         when(chatLinkRepository.findChatsByLinkId(3L)).thenReturn(List.of(103L));
@@ -366,7 +306,6 @@ public class DefaultLinkUpdaterServiceTest {
         when(scheduleProperties.getBatchSize()).thenReturn(3);
         when(scheduleProperties.getThreads()).thenReturn(1);
 
-
         Link link1 = new Link(1L, "https://github.com/a/b", null, Instant.now());
         Link link2 = new Link(2L, "https://github.com/c/d", null, Instant.now());
         Link link3 = new Link(3L, "https://stackoverflow.com/questions/123", null, Instant.now());
@@ -374,30 +313,25 @@ public class DefaultLinkUpdaterServiceTest {
         when(linkRepository.findBatch(3, 0)).thenReturn(List.of(link1, link2, link3));
         when(linkRepository.findBatch(3, 3)).thenReturn(List.of());
 
-        when(linkUpdateProcessor.process(link1))
-            .thenThrow(new RuntimeException("GitHub API failed"));
+        when(linkUpdateProcessor.process(link1)).thenThrow(new RuntimeException("GitHub API failed"));
 
-        when(linkUpdateProcessor.process(link2)).thenReturn(Optional.of(
-            new LinkUpdateEvent(
-                2L,
-                URI.create(link2.url()),
-                Instant.parse("2026-01-01T11:00:00Z"),
-                "Issue 2",
-                "bob",
-                "preview 2"
-            )
-        ));
+        when(linkUpdateProcessor.process(link2))
+                .thenReturn(Optional.of(new LinkUpdateEvent(
+                        2L,
+                        URI.create(link2.url()),
+                        Instant.parse("2026-01-01T11:00:00Z"),
+                        "Issue 2",
+                        "bob",
+                        "preview 2")));
 
-        when(linkUpdateProcessor.process(link3)).thenReturn(Optional.of(
-            new LinkUpdateEvent(
-                3L,
-                URI.create(link3.url()),
-                Instant.parse("2026-01-01T12:00:00Z"),
-                "Answer 1",
-                "charlie",
-                "preview 3"
-            )
-        ));
+        when(linkUpdateProcessor.process(link3))
+                .thenReturn(Optional.of(new LinkUpdateEvent(
+                        3L,
+                        URI.create(link3.url()),
+                        Instant.parse("2026-01-01T12:00:00Z"),
+                        "Answer 1",
+                        "charlie",
+                        "preview 3")));
 
         when(chatLinkRepository.findChatsByLinkId(2L)).thenReturn(List.of(102L));
         when(chatLinkRepository.findChatsByLinkId(3L)).thenReturn(List.of(103L));
@@ -419,7 +353,6 @@ public class DefaultLinkUpdaterServiceTest {
     void shouldUseConfiguredBatchSizeAndProcessMultipleBatches() {
         when(scheduleProperties.getBatchSize()).thenReturn(2);
         when(scheduleProperties.getThreads()).thenReturn(1);
-
 
         Link link1 = new Link(1L, "https://github.com/a/1", null, Instant.now());
         Link link2 = new Link(2L, "https://github.com/a/2", null, Instant.now());
@@ -455,7 +388,6 @@ public class DefaultLinkUpdaterServiceTest {
         when(scheduleProperties.getBatchSize()).thenReturn(3);
         when(scheduleProperties.getThreads()).thenReturn(1);
 
-
         Link link1 = new Link(1L, "https://github.com/a/b", null, Instant.now());
         Link link2 = new Link(2L, "https://github.com/c/d", null, Instant.now());
         Link link3 = new Link(3L, "https://stackoverflow.com/questions/123", null, Instant.now());
@@ -463,19 +395,16 @@ public class DefaultLinkUpdaterServiceTest {
         when(linkRepository.findBatch(3, 0)).thenReturn(List.of(link1, link2, link3));
         when(linkRepository.findBatch(3, 3)).thenReturn(List.of());
 
-        when(linkUpdateProcessor.process(link1))
-            .thenThrow(new RuntimeException("GitHub API failed"));
+        when(linkUpdateProcessor.process(link1)).thenThrow(new RuntimeException("GitHub API failed"));
 
-        when(linkUpdateProcessor.process(link2)).thenReturn(Optional.of(
-            new LinkUpdateEvent(
-                2L,
-                URI.create(link2.url()),
-                Instant.parse("2026-01-01T11:00:00Z"),
-                "Issue 2",
-                "bob",
-                "preview 2"
-            )
-        ));
+        when(linkUpdateProcessor.process(link2))
+                .thenReturn(Optional.of(new LinkUpdateEvent(
+                        2L,
+                        URI.create(link2.url()),
+                        Instant.parse("2026-01-01T11:00:00Z"),
+                        "Issue 2",
+                        "bob",
+                        "preview 2")));
 
         when(linkUpdateProcessor.process(link3)).thenReturn(Optional.empty());
 
@@ -518,13 +447,12 @@ public class DefaultLinkUpdaterServiceTest {
             release.await(2, TimeUnit.SECONDS);
 
             return Optional.of(new LinkUpdateEvent(
-                link.id(),
-                URI.create(link.url()),
-                Instant.parse("2026-01-01T10:00:00Z"),
-                "title-" + link.id(),
-                "author-" + link.id(),
-                "preview-" + link.id()
-            ));
+                    link.id(),
+                    URI.create(link.url()),
+                    Instant.parse("2026-01-01T10:00:00Z"),
+                    "title-" + link.id(),
+                    "author-" + link.id(),
+                    "preview-" + link.id()));
         });
 
         ExecutorService testExecutor = Executors.newSingleThreadExecutor();

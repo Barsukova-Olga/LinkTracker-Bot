@@ -22,9 +22,9 @@ public class GithubClient {
 
     public GithubIssueResponse[] getIssues(GithubParsedLink link) {
         return githubRestClient
-            .get()
-            .uri("/repos/{owner}/{repo}/issues", link.owner(), link.repo())
-            .retrieve()
-            .body(GithubIssueResponse[].class);
+                .get()
+                .uri("/repos/{owner}/{repo}/issues", link.owner(), link.repo())
+                .retrieve()
+                .body(GithubIssueResponse[].class);
     }
 }

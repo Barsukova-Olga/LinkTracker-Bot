@@ -2,6 +2,4 @@ package backend.academy.linktracker.scrapper.client.stackoverflow.dto;
 
 import java.util.List;
 
-public record StackoverflowItemsResponse<T>(
-    List<T> items
-) {}
+public record StackoverflowItemsResponse<T>(List<T> items) {}

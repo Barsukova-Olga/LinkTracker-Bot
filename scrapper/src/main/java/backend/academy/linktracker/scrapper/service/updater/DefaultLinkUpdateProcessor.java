@@ -4,17 +4,16 @@ import backend.academy.linktracker.scrapper.client.github.GithubClient;
 import backend.academy.linktracker.scrapper.client.github.dto.GithubIssueResponse;
 import backend.academy.linktracker.scrapper.client.stackoverflow.StackoverflowClient;
 import backend.academy.linktracker.scrapper.client.stackoverflow.dto.StackoverflowAnswerResponse;
-import backend.academy.linktracker.scrapper.client.stackoverflow.dto.StackoverflowAnswersResponse;
 import backend.academy.linktracker.scrapper.client.stackoverflow.dto.StackoverflowQuestionResponse;
 import backend.academy.linktracker.scrapper.link.parser.LinkParser;
 import backend.academy.linktracker.scrapper.model.GithubParsedLink;
 import backend.academy.linktracker.scrapper.model.Link;
 import backend.academy.linktracker.scrapper.model.ParsedLink;
 import backend.academy.linktracker.scrapper.model.StackoverflowParsedLink;
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.stereotype.Service;
 import java.util.List;
 import java.util.Optional;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.stereotype.Service;
 
 @Service
 @Slf4j
@@ -25,10 +24,7 @@ public class DefaultLinkUpdateProcessor implements LinkUpdateProcessor {
     private final LinkParser linkParser;
 
     public DefaultLinkUpdateProcessor(
-        GithubClient githubClient,
-        StackoverflowClient stackoverflowClient,
-        LinkParser linkParser
-    ) {
+            GithubClient githubClient, StackoverflowClient stackoverflowClient, LinkParser linkParser) {
         this.githubClient = githubClient;
         this.stackoverflowClient = stackoverflowClient;
         this.linkParser = linkParser;
@@ -59,7 +55,7 @@ public class DefaultLinkUpdateProcessor implements LinkUpdateProcessor {
 
             log.info("Checking GitHub link: url={}", githubLink.uri());
             GithubIssueResponse[] response = githubClient.getIssues(githubLink);
-            if(response.length == 0) {
+            if (response.length == 0) {
                 return Optional.empty();
             }
             GithubIssueResponse issue = response[0];
@@ -69,13 +65,19 @@ public class DefaultLinkUpdateProcessor implements LinkUpdateProcessor {
 
             log.info("GitHub link checked: url={}, updatedAt={}", githubLink.uri(), issue.createdAt());
 
-            return Optional.of(new LinkUpdateEvent(link.id(), githubLink.uri(), issue.createdAt(),
-                issue.title(), issue.user() == null ? null : issue.user().login() ,preview(issue.body())));
+            return Optional.of(new LinkUpdateEvent(
+                    link.id(),
+                    githubLink.uri(),
+                    issue.createdAt(),
+                    issue.title(),
+                    issue.user() == null ? null : issue.user().login(),
+                    preview(issue.body())));
         } catch (Exception e) {
             log.warn("Failed to check GitHub link: url={}, message={}", githubLink.uri(), e.getMessage());
             return Optional.empty();
         }
     }
+
     private Optional<LinkUpdateEvent> processStackoverflow(Link link, StackoverflowParsedLink stackoverflowLink) {
         try {
             log.info("Checking StackOverflow link: url={}", stackoverflowLink.uri());
@@ -98,24 +100,28 @@ public class DefaultLinkUpdateProcessor implements LinkUpdateProcessor {
             }
 
             log.info(
-                "StackOverflow link checked: url={}, creationDate={}",
-                stackoverflowLink.uri(),
-                answerResponse.creationDate());
-            return Optional.of(new LinkUpdateEvent(link.id(), stackoverflowLink.uri(), answerResponse.creationDate(),
-                questionResponse.title(), answerResponse.owner() == null ? null : answerResponse.owner().displayName() ,preview(answerResponse.body())));
+                    "StackOverflow link checked: url={}, creationDate={}",
+                    stackoverflowLink.uri(),
+                    answerResponse.creationDate());
+            return Optional.of(new LinkUpdateEvent(
+                    link.id(),
+                    stackoverflowLink.uri(),
+                    answerResponse.creationDate(),
+                    questionResponse.title(),
+                    answerResponse.owner() == null
+                            ? null
+                            : answerResponse.owner().displayName(),
+                    preview(answerResponse.body())));
         } catch (Exception e) {
-            log.warn(
-                "Failed to check StackOverflow link: url={}, message={}",
-                stackoverflowLink.uri(),
-                e.getMessage());
+            log.warn("Failed to check StackOverflow link: url={}, message={}", stackoverflowLink.uri(), e.getMessage());
             return Optional.empty();
         }
     }
+
     private String preview(String text) {
         if (text == null || text.isBlank()) {
             return "";
         }
         return text.length() <= 200 ? text : text.substring(0, 200);
     }
-
 }

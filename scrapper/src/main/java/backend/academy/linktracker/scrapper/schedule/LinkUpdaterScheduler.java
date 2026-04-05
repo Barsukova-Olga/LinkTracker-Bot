@@ -22,12 +22,13 @@ public class LinkUpdaterScheduler {
     public void update() {
         log.info("Scheduler started");
         LinkUpdateReport report = linkUpdaterService.update();
-        log.info("Update finished: processed={}, updated={}, failed={}",
-            report.totalProcessed(),
-            report.totalUpdated(),
-            report.failedLinks().size()
-        );
+        log.info(
+                "Update finished: processed={}, updated={}, failed={}",
+                report.totalProcessed(),
+                report.totalUpdated(),
+                report.failedLinks().size());
         if (!report.failedLinks().isEmpty()) {
             log.warn("Failed links: {}", report.failedLinks());
-        }    }
+        }
+    }
 }

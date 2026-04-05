@@ -5,10 +5,10 @@ import backend.academy.linktracker.scrapper.client.stackoverflow.dto.Stackoverfl
 import backend.academy.linktracker.scrapper.client.stackoverflow.dto.StackoverflowQuestionResponse;
 import backend.academy.linktracker.scrapper.client.stackoverflow.dto.StackoverflowQuestionsResponse;
 import backend.academy.linktracker.scrapper.model.StackoverflowParsedLink;
+import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestClient;
-import java.util.List;
 
 @Component
 @RequiredArgsConstructor
@@ -18,10 +18,10 @@ public class StackoverflowClient {
 
     public StackoverflowQuestionResponse getQuestion(StackoverflowParsedLink link) {
         StackoverflowQuestionsResponse response = stackoverflowRestClient
-            .get()
-            .uri("/questions/{id}?site=stackoverflow", link.questionId())
-            .retrieve()
-            .body(StackoverflowQuestionsResponse.class);
+                .get()
+                .uri("/questions/{id}?site=stackoverflow", link.questionId())
+                .retrieve()
+                .body(StackoverflowQuestionsResponse.class);
 
         if (response == null || response.items() == null || response.items().isEmpty()) {
             return null;
@@ -32,10 +32,10 @@ public class StackoverflowClient {
 
     public List<StackoverflowAnswerResponse> getAnswers(StackoverflowParsedLink link) {
         StackoverflowAnswersResponse response = stackoverflowRestClient
-            .get()
-            .uri("/questions/{id}/answers?site=stackoverflow&sort=creation&order=desc", link.questionId())
-            .retrieve()
-            .body(StackoverflowAnswersResponse.class);
+                .get()
+                .uri("/questions/{id}/answers?site=stackoverflow&sort=creation&order=desc", link.questionId())
+                .retrieve()
+                .body(StackoverflowAnswersResponse.class);
 
         if (response == null || response.items() == null) {
             return List.of();
@@ -43,5 +43,4 @@ public class StackoverflowClient {
 
         return response.items();
     }
-
 }

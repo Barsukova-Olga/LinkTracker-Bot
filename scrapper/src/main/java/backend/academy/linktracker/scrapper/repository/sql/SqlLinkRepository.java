@@ -87,17 +87,12 @@ public class SqlLinkRepository implements LinkRepository {
 
     @Override
     public List<Link> findBatch(int limit, int offset) {
-        return jdbcTemplate.query(
-            """
+        return jdbcTemplate.query("""
             select id, url, last_updated_at, created_at
             from links
             order by id
             limit ? offset ?
-            """,
-            linkRowMapper(),
-            limit,
-            offset
-        );
+            """, linkRowMapper(), limit, offset);
     }
 
     @Override
