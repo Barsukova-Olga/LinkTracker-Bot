@@ -1,4 +1,4 @@
-package backend.academy.linktracker.scrapper.properties;
+package backend.academy.linktracker.scrapper.configuration.properties;
 
 import jakarta.validation.constraints.NotEmpty;
 import lombok.EqualsAndHashCode;
@@ -8,17 +8,14 @@ import lombok.Setter;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.validation.annotation.Validated;
 
-@ConfigurationProperties(prefix = "app.stackoverflow")
+@ConfigurationProperties(prefix = "app.bot")
 @Validated
 @Getter
 @Setter
 @EqualsAndHashCode
 @NoArgsConstructor
-public class StackoverflowProperties {
+public class BotProperties {
 
     @NotEmpty
-    private String key;
-
-    @NotEmpty
-    private String accessToken;
+    String baseUrl;
 }

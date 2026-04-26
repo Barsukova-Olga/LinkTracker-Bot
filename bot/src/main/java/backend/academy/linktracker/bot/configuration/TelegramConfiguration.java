@@ -1,6 +1,6 @@
 package backend.academy.linktracker.bot.configuration;
 
-import backend.academy.linktracker.bot.properties.TelegramProperties;
+import backend.academy.linktracker.bot.configuration.properties.TelegramProperties;
 import com.pengrad.telegrambot.TelegramBot;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;

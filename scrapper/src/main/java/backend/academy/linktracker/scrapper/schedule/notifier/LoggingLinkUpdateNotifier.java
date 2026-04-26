@@ -1,5 +1,6 @@
 package backend.academy.linktracker.scrapper.schedule.notifier;
 
+import backend.academy.linktracker.scrapper.dto.LinkUpdateRequest;
 import backend.academy.linktracker.scrapper.model.TrackedParsedLink;
 import lombok.extern.slf4j.Slf4j;
 
@@ -7,11 +8,11 @@ import lombok.extern.slf4j.Slf4j;
 public class LoggingLinkUpdateNotifier implements LinkUpdateNotifier {
 
     @Override
-    public void notifyUpdate(long chatId, TrackedParsedLink link) {
+    public void notifyUpdate(LinkUpdateRequest linkUpdateRequest) {
         log.info(
                 "Stub update notification: chatId={}, linkId={}, url={}",
-                chatId,
-                link.id(),
-                link.parsedLink().uri());
+                linkUpdateRequest.tgChatIds(),
+                linkUpdateRequest.id(),
+                linkUpdateRequest.url());
     }
 }

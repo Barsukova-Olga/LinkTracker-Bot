@@ -1,26 +1,27 @@
 package backend.academy.linktracker.scrapper.schedule.notifier;
 
-import backend.academy.linktracker.scrapper.client.BotClient;
 import backend.academy.linktracker.scrapper.dto.LinkUpdateRequest;
-import backend.academy.linktracker.scrapper.model.TrackedParsedLink;
-import java.util.List;
+import backend.academy.linktracker.scrapper.service.kafka.KafkaLinkUpdateProducer;
 import lombok.RequiredArgsConstructor;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.context.annotation.Primary;
 import org.springframework.stereotype.Component;
+
 
 @Component
 @ConditionalOnProperty(
     prefix = "app",
     name = "message-transport",
-    havingValue = "http"
+    havingValue = "kafka",
+    matchIfMissing = true
 )
 @RequiredArgsConstructor
-public class BotLinkUpdateNotifier implements LinkUpdateNotifier {
+public class KafkaLinkUpdateNotifier implements LinkUpdateNotifier {
 
-    private final BotClient botClient;
+    private final KafkaLinkUpdateProducer producer;
 
     @Override
-    public void notifyUpdate(LinkUpdateRequest linkUpdateRequest) {
-        botClient.sendUpdate(linkUpdateRequest);
+    public void notifyUpdate(LinkUpdateRequest update) {
+        producer.send(update);
     }
 }

@@ -4,6 +4,19 @@ server:
 spring:
   application:
     name: bot
+  kafka:
+    bootstrap-servers: localhost:19092,localhost:19094,localhost:19096
+    consumer:
+      group-id: link-tracker-bot
+      auto-offset-reset: earliest
+      key-deserializer: org.apache.kafka.common.serialization.LongDeserializer
+      value-deserializer: io.confluent.kafka.serializers.KafkaAvroDeserializer
+      properties:
+        schema.registry.url: http://localhost:8081
+        specific.avro.reader: true
+        spring.json.trusted.packages: "backend.academy.linktracker.bot.dto"
+        spring.json.value.default.type: backend.academy.linktracker.bot.dto.LinkUpdateRequest
+        spring.json.use.type.headers: false
 
 app:
   scrapper:
@@ -13,3 +26,9 @@ app:
     token: ${TELEGRAM_TOKEN} # Use env variable. DO NOT KEEP TOKEN HERE
     update-listener-sleep: 1s
     debug: false
+  kafka:
+    topics:
+      link-updates: link-updates
+    consumer:
+      retry-attempts: 3
+      retry-backoff-ms: 1000

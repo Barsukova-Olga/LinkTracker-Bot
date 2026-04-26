@@ -15,9 +15,10 @@ import backend.academy.linktracker.scrapper.dto.LinkUpdateRequest;
 import backend.academy.linktracker.scrapper.link.parser.LinkParser;
 import backend.academy.linktracker.scrapper.model.GithubParsedLink;
 import backend.academy.linktracker.scrapper.model.Link;
-import backend.academy.linktracker.scrapper.properties.ScheduleProperties;
+import backend.academy.linktracker.scrapper.configuration.properties.ScheduleProperties;
 import backend.academy.linktracker.scrapper.repository.ChatLinkRepository;
 import backend.academy.linktracker.scrapper.repository.LinkRepository;
+import backend.academy.linktracker.scrapper.schedule.notifier.LinkUpdateNotifier;
 import backend.academy.linktracker.scrapper.service.updater.DefaultLinkUpdateProcessor;
 import backend.academy.linktracker.scrapper.service.updater.DefaultLinkUpdaterService;
 import backend.academy.linktracker.scrapper.service.updater.LinkUpdateEvent;
@@ -32,6 +33,8 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
+import backend.academy.linktracker.scrapper.service.updater.LinkUpdateTransactionService;
+import backend.academy.linktracker.scrapper.service.updater.LinkUpdaterService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
@@ -41,6 +44,7 @@ public class DefaultLinkUpdaterServiceTest {
     private LinkRepository linkRepository;
     private ChatLinkRepository chatLinkRepository;
     private LinkUpdateProcessor linkUpdateProcessor;
+    private LinkUpdateTransactionService linkUpdateTransactionService;
     private BotClient botClient;
     private ScheduleProperties scheduleProperties;
     private DefaultLinkUpdaterService service;
@@ -50,11 +54,12 @@ public class DefaultLinkUpdaterServiceTest {
         linkRepository = mock(LinkRepository.class);
         chatLinkRepository = mock(ChatLinkRepository.class);
         linkUpdateProcessor = mock(LinkUpdateProcessor.class);
+        linkUpdateTransactionService = mock(LinkUpdateTransactionService.class);
         botClient = mock(BotClient.class);
         scheduleProperties = mock(ScheduleProperties.class);
 
         service = new DefaultLinkUpdaterService(
-                linkRepository, chatLinkRepository, linkUpdateProcessor, botClient, scheduleProperties);
+                linkRepository, chatLinkRepository, linkUpdateProcessor, linkUpdateTransactionService, scheduleProperties);
     }
 
     @Test
@@ -80,14 +85,19 @@ public class DefaultLinkUpdaterServiceTest {
 
         service.update();
 
-        ArgumentCaptor<LinkUpdateRequest> captor = ArgumentCaptor.forClass(LinkUpdateRequest.class);
-        verify(botClient).sendUpdate(captor.capture());
+        ArgumentCaptor<String> descriptionCaptor = ArgumentCaptor.forClass(String.class);
 
-        LinkUpdateRequest request = captor.getValue();
+        verify(linkUpdateTransactionService).saveUpdateAndOutbox(
+            eq(link),
+            any(LinkUpdateEvent.class),
+            descriptionCaptor.capture()
+        );
 
-        assertTrue(request.description().contains("New issue title"));
-        assertTrue(request.description().contains("alice"));
-        assertTrue(request.description().contains("Issue preview text"));
+        String description = descriptionCaptor.getValue();
+
+        assertTrue(description.contains("New issue title"));
+        assertTrue(description.contains("alice"));
+        assertTrue(description.contains("Issue preview text"));
     }
 
     @Test
@@ -113,14 +123,20 @@ public class DefaultLinkUpdaterServiceTest {
 
         service.update();
 
-        ArgumentCaptor<LinkUpdateRequest> captor = ArgumentCaptor.forClass(LinkUpdateRequest.class);
-        verify(botClient).sendUpdate(captor.capture());
 
-        LinkUpdateRequest request = captor.getValue();
+        ArgumentCaptor<String> descriptionCaptor = ArgumentCaptor.forClass(String.class);
 
-        assertTrue(request.description().contains("How to reverse a string in Java?"));
-        assertTrue(request.description().contains("Bob Smith"));
-        assertTrue(request.description().contains("You can use StringBuilder and call reverse()."));
+        verify(linkUpdateTransactionService).saveUpdateAndOutbox(
+            eq(link),
+            any(LinkUpdateEvent.class),
+            descriptionCaptor.capture()
+        );
+
+        String description = descriptionCaptor.getValue();
+
+        assertTrue(description.contains("How to reverse a string in Java?"));
+        assertTrue(description.contains("Bob Smith"));
+        assertTrue(description.contains("You can use StringBuilder and call reverse()."));
     }
 
     @Test
@@ -128,25 +144,43 @@ public class DefaultLinkUpdaterServiceTest {
         when(scheduleProperties.getBatchSize()).thenReturn(2);
         when(scheduleProperties.getThreads()).thenReturn(1);
 
-        Link failedLink = new Link(1L, "https://github.com/openai/openai-java", null, Instant.now());
+        Link failedLink = new Link(
+            1L,
+            "https://github.com/openai/openai-java",
+            null,
+            Instant.now()
+        );
 
-        Link okLink = new Link(2L, "https://stackoverflow.com/questions/11227809", null, Instant.now());
+        Link okLink = new Link(
+            2L,
+            "https://stackoverflow.com/questions/11227809",
+            null,
+            Instant.now()
+        );
+
+        LinkUpdateEvent okEvent = new LinkUpdateEvent(
+            2L,
+            URI.create(okLink.url()),
+            Instant.parse("2026-01-02T12:30:00Z"),
+            "How to reverse a string in Java?",
+            "Bob Smith",
+            "You can use StringBuilder and call reverse()."
+        );
 
         when(linkRepository.findBatch(2, 0)).thenReturn(List.of(failedLink, okLink));
         when(linkRepository.findBatch(2, 2)).thenReturn(List.of());
 
-        when(linkUpdateProcessor.process(failedLink)).thenThrow(new RuntimeException("External API unavailable"));
+        when(linkUpdateProcessor.process(failedLink))
+            .thenThrow(new RuntimeException("External API unavailable"));
 
         when(linkUpdateProcessor.process(okLink))
-                .thenReturn(Optional.of(new LinkUpdateEvent(
-                        2L,
-                        URI.create(okLink.url()),
-                        Instant.parse("2026-01-02T12:30:00Z"),
-                        "How to reverse a string in Java?",
-                        "Bob Smith",
-                        "You can use StringBuilder and call reverse().")));
+            .thenReturn(Optional.of(okEvent));
 
-        when(chatLinkRepository.findChatsByLinkId(2L)).thenReturn(List.of(202L));
+        when(linkUpdateTransactionService.saveUpdateAndOutbox(
+            eq(okLink),
+            eq(okEvent),
+            anyString()
+        )).thenReturn(true);
 
         LinkUpdateReport report = service.update();
 
@@ -154,11 +188,23 @@ public class DefaultLinkUpdaterServiceTest {
         assertEquals(1, report.totalUpdated());
         assertEquals(List.of("https://github.com/openai/openai-java"), report.failedLinks());
 
-        verify(botClient, times(1)).sendUpdate(any(LinkUpdateRequest.class));
-        verify(linkRepository, never()).updateLastUpdatedAt(eq(1L), any());
-        verify(linkRepository).updateLastUpdatedAt(2L, Instant.parse("2026-01-02T12:30:00Z"));
-    }
+        verify(linkUpdateProcessor).process(failedLink);
+        verify(linkUpdateProcessor).process(okLink);
 
+        verify(linkUpdateTransactionService, times(1))
+            .saveUpdateAndOutbox(
+                eq(okLink),
+                eq(okEvent),
+                anyString()
+            );
+
+        verify(linkUpdateTransactionService, never())
+            .saveUpdateAndOutbox(
+                eq(failedLink),
+                any(LinkUpdateEvent.class),
+                anyString()
+            );
+    }
     @Test
     void shouldTrimGithubPreviewTo200Characters() {
         GithubClient githubClient = mock(GithubClient.class);
@@ -238,20 +284,25 @@ public class DefaultLinkUpdaterServiceTest {
         when(linkRepository.findBatch(3, 0)).thenReturn(List.of(link1, link2, link3));
         when(linkRepository.findBatch(3, 3)).thenReturn(List.of());
 
-        when(linkUpdateProcessor.process(link1)).thenThrow(new RuntimeException("GitHub API failed"));
+        when(linkUpdateProcessor.process(link1))
+            .thenThrow(new RuntimeException("GitHub API failed"));
 
         when(linkUpdateProcessor.process(link2))
-                .thenReturn(Optional.of(new LinkUpdateEvent(
-                        2L,
-                        URI.create(link2.url()),
-                        Instant.parse("2026-01-01T11:00:00Z"),
-                        "Issue 2",
-                        "bob",
-                        "preview 2")));
+            .thenReturn(Optional.of(new LinkUpdateEvent(
+                2L,
+                URI.create(link2.url()),
+                Instant.parse("2026-01-01T11:00:00Z"),
+                "Issue 2",
+                "bob",
+                "preview 2")));
 
         when(linkUpdateProcessor.process(link3)).thenReturn(Optional.empty());
 
-        when(chatLinkRepository.findChatsByLinkId(2L)).thenReturn(List.of(102L));
+        when(linkUpdateTransactionService.saveUpdateAndOutbox(
+            any(Link.class),
+            any(LinkUpdateEvent.class),
+            anyString()
+        )).thenReturn(true);
 
         LinkUpdateReport report = service.update();
 
@@ -259,10 +310,13 @@ public class DefaultLinkUpdaterServiceTest {
         assertEquals(1, report.totalUpdated());
         assertIterableEquals(List.of("https://github.com/a/b"), report.failedLinks());
 
-        verify(linkRepository).updateLastUpdatedAt(2L, Instant.parse("2026-01-01T11:00:00Z"));
-        verify(botClient, times(1)).sendUpdate(any());
+        verify(linkUpdateTransactionService, times(1))
+            .saveUpdateAndOutbox(
+                eq(link2),
+                any(LinkUpdateEvent.class),
+                anyString()
+            );
     }
-
     @Test
     void shouldProcessLinksInParallel() throws Exception {
         when(scheduleProperties.getBatchSize()).thenReturn(4);
@@ -280,6 +334,12 @@ public class DefaultLinkUpdaterServiceTest {
         when(chatLinkRepository.findChatsByLinkId(2L)).thenReturn(List.of(102L));
         when(chatLinkRepository.findChatsByLinkId(3L)).thenReturn(List.of(103L));
         when(chatLinkRepository.findChatsByLinkId(4L)).thenReturn(List.of(104L));
+
+        when(linkUpdateTransactionService.saveUpdateAndOutbox(
+            any(Link.class),
+            any(LinkUpdateEvent.class),
+            anyString()
+        )).thenReturn(true);
 
         CountDownLatch started = new CountDownLatch(2);
         CountDownLatch release = new CountDownLatch(1);
@@ -314,6 +374,16 @@ public class DefaultLinkUpdaterServiceTest {
         verify(linkRepository).findBatch(4, 0);
         verify(linkRepository).findBatch(4, 4);
         verify(linkUpdateProcessor, times(4)).process(any(Link.class));
-        verify(botClient, times(4)).sendUpdate(any(LinkUpdateRequest.class));
+        verify(linkUpdateTransactionService, times(4))
+
+            .saveUpdateAndOutbox(
+
+                any(Link.class),
+
+                any(LinkUpdateEvent.class),
+
+                anyString()
+
+            );
     }
 }

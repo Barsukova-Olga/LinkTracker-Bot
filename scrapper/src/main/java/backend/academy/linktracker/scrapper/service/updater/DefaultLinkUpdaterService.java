@@ -3,7 +3,7 @@ package backend.academy.linktracker.scrapper.service.updater;
 import backend.academy.linktracker.scrapper.client.BotClient;
 import backend.academy.linktracker.scrapper.dto.LinkUpdateRequest;
 import backend.academy.linktracker.scrapper.model.Link;
-import backend.academy.linktracker.scrapper.properties.ScheduleProperties;
+import backend.academy.linktracker.scrapper.configuration.properties.ScheduleProperties;
 import backend.academy.linktracker.scrapper.repository.*;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -13,6 +13,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
+import backend.academy.linktracker.scrapper.schedule.notifier.LinkUpdateNotifier;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -25,7 +26,7 @@ public class DefaultLinkUpdaterService implements LinkUpdaterService {
     private final LinkRepository linkRepository;
     private final ChatLinkRepository chatLinkRepository;
     private final LinkUpdateProcessor linkUpdateProcessor;
-    private final BotClient botClient;
+    private final LinkUpdateTransactionService linkUpdateTransactionService;
     private final ScheduleProperties scheduleProperties;
 
     @Override
@@ -92,9 +93,12 @@ public class DefaultLinkUpdaterService implements LinkUpdaterService {
                                     nullToDefault(linkUpdateEvent.author(), "Неизвестный автор"),
                                     linkUpdateEvent.occurredAt(),
                                     nullToDefault(linkUpdateEvent.preview(), "Превью отсутствует"));
-                    botClient.sendUpdate(new LinkUpdateRequest(
-                            linkUpdateEvent.linkId(), linkUpdateEvent.url(), description, chatIds));
-                    totalUpdated.incrementAndGet();
+                    boolean notificationCreated =
+                        linkUpdateTransactionService.saveUpdateAndOutbox(link, linkUpdateEvent, description);
+
+                    if (notificationCreated) {
+                        totalUpdated.incrementAndGet();
+                    }
                 }
             } catch (Exception e) {
                 failedLinks.add(link.url());

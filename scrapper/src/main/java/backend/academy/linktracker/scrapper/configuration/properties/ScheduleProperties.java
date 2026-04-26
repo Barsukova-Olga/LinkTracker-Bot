@@ -1,4 +1,4 @@
-package backend.academy.linktracker.scrapper.properties;
+package backend.academy.linktracker.scrapper.configuration.properties;
 
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;

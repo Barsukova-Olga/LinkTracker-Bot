@@ -14,6 +14,17 @@ spring:
     enabled: true
     change-log: classpath:/migrations/master.xml
 
+  kafka:
+    bootstrap-servers: localhost:19092,localhost:19094,localhost:19096
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.LongSerializer
+      value-serializer: io.confluent.kafka.serializers.KafkaAvroSerializer
+      properties:
+        schema.registry.url: http://localhost:8081
+        auto.register.schemas: true
+        spring.json.add.type.headers: false
+        acks: all
+
 app:
   bot:
     base-url: http://localhost:8080
@@ -25,6 +36,18 @@ app:
     interval: 60000
     batch-size: 100
     threads: 4
+
+  message-transport: kafka # kafka | http
+
+  kafka:
+    topics:
+      link-updates: link-updates
+
+  outbox:
+    enabled: true
+    batch-size: 100
+    max-attempts: 5
+    poll-interval: 5s
 
   stackoverflow:
     key: ${STACKOVERFLOW_KEY} # Use env variable. DO NOT KEEP TOKEN HERE
