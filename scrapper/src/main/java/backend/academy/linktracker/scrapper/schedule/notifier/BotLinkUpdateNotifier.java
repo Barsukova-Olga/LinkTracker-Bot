@@ -2,18 +2,12 @@ package backend.academy.linktracker.scrapper.schedule.notifier;
 
 import backend.academy.linktracker.scrapper.client.BotClient;
 import backend.academy.linktracker.scrapper.dto.LinkUpdateRequest;
-import backend.academy.linktracker.scrapper.model.TrackedParsedLink;
-import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Component;
 
 @Component
-@ConditionalOnProperty(
-    prefix = "app",
-    name = "message-transport",
-    havingValue = "http"
-)
+@ConditionalOnProperty(prefix = "app", name = "message-transport", havingValue = "http")
 @RequiredArgsConstructor
 public class BotLinkUpdateNotifier implements LinkUpdateNotifier {
 

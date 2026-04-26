@@ -17,5 +17,3 @@ public class KafkaTopicsProperties {
 
     private String linkUpdates;
 }
-
-

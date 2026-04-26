@@ -12,6 +12,7 @@ import backend.academy.linktracker.scrapper.repository.ChatRepository;
 import backend.academy.linktracker.scrapper.repository.LinkRepository;
 import backend.academy.linktracker.scrapper.service.updater.LinkUpdateEvent;
 import backend.academy.linktracker.scrapper.service.updater.LinkUpdateProcessor;
+import backend.academy.linktracker.scrapper.service.updater.LinkUpdateTransactionService;
 import backend.academy.linktracker.scrapper.service.updater.LinkUpdaterService;
 import java.net.URI;
 import java.time.Instant;
@@ -45,6 +46,9 @@ public abstract class LinkUpdaterServiceTest extends AbstractPostgresSpringBootT
     @MockitoBean
     protected BotClient botClient;
 
+    @MockitoBean
+    protected LinkUpdateTransactionService linkUpdateTransactionService;
+
     @BeforeEach
     void cleanDatabase() {
         jdbcTemplate.execute("delete from link_tag");
@@ -67,11 +71,14 @@ public abstract class LinkUpdaterServiceTest extends AbstractPostgresSpringBootT
                 .thenReturn(Optional.of(new LinkUpdateEvent(
                         link.id(), URI.create(url), newUpdatedAt, "Issue title", "alice", "preview")));
 
+        when(linkUpdateTransactionService.saveUpdateAndOutbox(any(), any(), any()))
+                .thenReturn(true);
+
         linkUpdateService.update();
 
         Link updatedLink = linkRepository.findById(link.id()).orElseThrow();
 
         assertEquals(newUpdatedAt, updatedLink.lastUpdatedAt());
-        verify(botClient, times(1)).sendUpdate(any());
+        verify(linkUpdateTransactionService, times(1)).saveUpdateAndOutbox(any(), any(), any());
     }
 }

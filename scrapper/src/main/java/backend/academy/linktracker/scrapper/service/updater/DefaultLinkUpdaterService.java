@@ -1,9 +1,7 @@
 package backend.academy.linktracker.scrapper.service.updater;
 
-import backend.academy.linktracker.scrapper.client.BotClient;
-import backend.academy.linktracker.scrapper.dto.LinkUpdateRequest;
-import backend.academy.linktracker.scrapper.model.Link;
 import backend.academy.linktracker.scrapper.configuration.properties.ScheduleProperties;
+import backend.academy.linktracker.scrapper.model.Link;
 import backend.academy.linktracker.scrapper.repository.*;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -13,7 +11,6 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
-import backend.academy.linktracker.scrapper.schedule.notifier.LinkUpdateNotifier;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -94,7 +91,7 @@ public class DefaultLinkUpdaterService implements LinkUpdaterService {
                                     linkUpdateEvent.occurredAt(),
                                     nullToDefault(linkUpdateEvent.preview(), "Превью отсутствует"));
                     boolean notificationCreated =
-                        linkUpdateTransactionService.saveUpdateAndOutbox(link, linkUpdateEvent, description);
+                            linkUpdateTransactionService.saveUpdateAndOutbox(link, linkUpdateEvent, description);
 
                     if (notificationCreated) {
                         totalUpdated.incrementAndGet();

@@ -18,7 +18,7 @@
 
 Сечас реализовнны :
 - `bot` — Telegram-бот и HTTP API для получения обновлений от `scrapper`;
-- `scrapper` — сервис подписок и планировщик проверки ссылок;  
+- `scrapper` — сервис подписок и планировщик проверки ссылок;
 
 В будущем также планируются :
 - `ai-agent` — отдельный сервис для AI-сценариев;
@@ -27,12 +27,12 @@
 ## Технологический стек
 
 - **Java 25**
-- **Spring Boot** 
+- **Spring Boot**
 - **PostgreSQL**
 - **Liquibase** - для миграций схемы БД
 - **Spring Data JDBC/JPA**
 - **OpenAPI**
-- **Telegram Bot API** 
+- **Telegram Bot API**
 - **Maven Wrapper** - для воспроизводимой сборки
 - **Testcontainers, WireMock, JUnit** - для тестирования
 
@@ -58,6 +58,7 @@ app:
 - `jdbc:postgresql://localhost:5432/linktracker`
 - `username: postgres`
 - `password: postgres
+
 ## Быстрый старт
 
 ### 1) Поднять PostgreSQL
@@ -83,6 +84,7 @@ docker compose up -d postgres
 ```
 
 Или запуск из IDE с главным классом нужного модуля.
+
 ## Запуск тестов
 
 ```bash

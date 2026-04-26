@@ -39,11 +39,11 @@ public abstract class AbstractPostgresSpringBootTest {
         registry.add("app.outbox.max-attempts", () -> "3");
         registry.add("app.outbox.poll-interval", () -> "10s");
 
-        registry.add("spring.kafka.producer.key-serializer",
-            () -> "org.apache.kafka.common.serialization.LongSerializer");
-        registry.add("spring.kafka.producer.value-serializer",
-            () -> "org.springframework.kafka.support.serializer.JsonSerializer");
-        registry.add("spring.kafka.producer.properties.spring.json.add.type.headers",
-            () -> "false");
+        registry.add(
+                "spring.kafka.producer.key-serializer", () -> "org.apache.kafka.common.serialization.LongSerializer");
+        registry.add(
+                "spring.kafka.producer.value-serializer",
+                () -> "org.springframework.kafka.support.serializer.JsonSerializer");
+        registry.add("spring.kafka.producer.properties.spring.json.add.type.headers", () -> "false");
     }
 }

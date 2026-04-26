@@ -68,4 +68,10 @@
     <Match>
         <Package name="~.*\.jmh_generated"/>
     </Match>
+
+    <!-- Generated Avro classes -->
+    <Match>
+        <Class name="backend.academy.linktracker.events.LinkUpdateEvent"/>
+        <Bug pattern="MS_EXPOSE_REP"/>
+    </Match>
 </FindBugsFilter>

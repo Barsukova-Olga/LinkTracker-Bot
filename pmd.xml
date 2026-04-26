@@ -14,6 +14,9 @@
         [0] https://pmd.github.io/latest/pmd_userdocs_making_rulesets.html
     </description>
 
+    <!-- Avro generated sources -->
+    <exclude-pattern>.*/generated-sources/avro/.*</exclude-pattern>
+
     <rule ref="category/java/bestpractices.xml/AvoidUsingHardCodedIP"/>
     <rule ref="category/java/bestpractices.xml/CheckResultSet"/>
     <rule ref="category/java/bestpractices.xml/PrimitiveWrapperInstantiation"/>

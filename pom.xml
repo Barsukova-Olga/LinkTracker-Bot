@@ -28,8 +28,8 @@
         <module>ai-agent</module>
         <module>bot</module>
         <module>build-report-aggregate</module>
-        <module>scrapper</module>
         <module>common</module>
+        <module>scrapper</module>
     </modules>
 
     <scm>
@@ -306,6 +306,9 @@
                         <printFailingErrors>true</printFailingErrors>
                         <linkXRef>false</linkXRef>
                         <outputDirectory>${project.reporting.outputDirectory}/pmd</outputDirectory>
+                        <excludeRoots>
+                            <excludeRoot>${project.build.directory}/generated-sources/avro</excludeRoot>
+                        </excludeRoots>
                         <rulesets>
                             <ruleset>pmd.xml</ruleset>
                         </rulesets>

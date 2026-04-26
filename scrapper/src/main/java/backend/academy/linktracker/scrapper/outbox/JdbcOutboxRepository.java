@@ -22,87 +22,65 @@ public class JdbcOutboxRepository {
         try {
             String json = objectMapper.writeValueAsString(payload);
 
-            jdbcTemplate.update(
-                """
+            jdbcTemplate.update("""
                 INSERT INTO outbox_messages(topic, message_key, payload, status)
                 VALUES (?, ?, ?::jsonb, ?)
-                """,
-                topic,
-                messageKey,
-                json,
-                OutboxStatus.NEW.name()
-            );
+                """, topic, messageKey, json, OutboxStatus.NEW.name());
         } catch (JsonProcessingException e) {
             throw new IllegalStateException("Failed to serialize outbox payload", e);
         }
     }
 
     public List<OutboxMessage> findNewMessages(int limit) {
-        return jdbcTemplate.query(
-            """
+        return jdbcTemplate.query("""
             SELECT id, topic, message_key, payload::text, status, attempts, last_error, created_at, sent_at
             FROM outbox_messages
             WHERE status = 'NEW'
             ORDER BY created_at
             LIMIT ?
             FOR UPDATE SKIP LOCKED
-            """,
-            this::mapRow,
-            limit
-        );
+            """, (rs, ignored) -> mapRow(rs), limit);
     }
 
     public void markSent(long id) {
-        jdbcTemplate.update(
-            """
+        jdbcTemplate.update("""
             UPDATE outbox_messages
             SET status = 'SENT',
                 sent_at = now(),
                 last_error = null
             WHERE id = ?
-            """,
-            id
-        );
+            """, id);
     }
 
     public void markFailed(long id, String error) {
-        jdbcTemplate.update(
-            """
+        jdbcTemplate.update("""
             UPDATE outbox_messages
             SET status = 'FAILED',
                 attempts = attempts + 1,
                 last_error = ?
             WHERE id = ?
-            """,
-            error,
-            id
-        );
+            """, error, id);
     }
 
     public void incrementAttempts(long id, String error) {
-        jdbcTemplate.update(
-            """
+        jdbcTemplate.update("""
             UPDATE outbox_messages
             SET attempts = attempts + 1,
                 last_error = ?
             WHERE id = ?
-            """,
-            error,
-            id
-        );
+            """, error, id);
     }
 
-    private OutboxMessage mapRow(ResultSet rs, int rowNum) throws SQLException {
+    private OutboxMessage mapRow(ResultSet rs) throws SQLException {
         return new OutboxMessage(
-            rs.getLong("id"),
-            rs.getString("topic"),
-            rs.getString("message_key"),
-            rs.getString("payload"),
-            OutboxStatus.valueOf(rs.getString("status")),
-            rs.getInt("attempts"),
-            rs.getString("last_error"),
-            rs.getObject("created_at", OffsetDateTime.class),
-            rs.getObject("sent_at", OffsetDateTime.class)
-        );
+                rs.getLong("id"),
+                rs.getString("topic"),
+                rs.getString("message_key"),
+                rs.getString("payload"),
+                OutboxStatus.valueOf(rs.getString("status")),
+                rs.getInt("attempts"),
+                rs.getString("last_error"),
+                rs.getObject("created_at", OffsetDateTime.class),
+                rs.getObject("sent_at", OffsetDateTime.class));
     }
 }

@@ -1,72 +1,50 @@
 package backend.academy.linktracker.scrapper.kafka;
 
-import backend.academy.linktracker.scrapper.configuration.KafkaTopicConfig;
+import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
+
+import backend.academy.linktracker.events.LinkUpdateEvent;
 import backend.academy.linktracker.scrapper.configuration.properties.KafkaTopicsProperties;
 import backend.academy.linktracker.scrapper.dto.LinkUpdateRequest;
 import backend.academy.linktracker.scrapper.service.kafka.KafkaLinkUpdateProducer;
-import org.apache.kafka.clients.consumer.Consumer;
-import org.apache.kafka.clients.consumer.ConsumerConfig;
-import org.apache.kafka.clients.consumer.ConsumerRecord;
-import org.apache.kafka.clients.consumer.ConsumerRecords;
-import org.apache.kafka.clients.consumer.KafkaConsumer;
-import org.apache.kafka.common.serialization.LongDeserializer;
-import org.apache.kafka.common.serialization.StringDeserializer;
-import org.junit.jupiter.api.Test;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.kafka.core.KafkaTemplate;
-import org.springframework.test.context.DynamicPropertyRegistry;
-import org.springframework.test.context.DynamicPropertySource;
-import org.testcontainers.junit.jupiter.Container;
-import org.testcontainers.junit.jupiter.Testcontainers;
-import org.testcontainers.kafka.KafkaContainer;
-
-import org.testcontainers.utility.DockerImageName;
 import java.net.URI;
-import java.time.Duration;
 import java.util.List;
-import java.util.Map;
-import java.util.Properties;
-
-import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
+import java.util.concurrent.CompletableFuture;
+import org.junit.jupiter.api.Test;
+import org.mockito.ArgumentCaptor;
+import org.springframework.kafka.core.KafkaTemplate;
+import org.testcontainers.junit.jupiter.Testcontainers;
 
 @Testcontainers
-class KafkaLinkUpdateProducerTest extends AbstractKafkaPostgresSpringBootTest{
-
-    @Autowired
-    private KafkaLinkUpdateProducer producer;
+class KafkaLinkUpdateProducerTest {
     ;
 
     @Test
     void shouldSendMessageToKafka() {
-        LinkUpdateRequest update = new LinkUpdateRequest(
-            1L,
-            URI.create("https://example.com"),
-            "test description",
-            List.of(123L)
-        );
+        @SuppressWarnings("unchecked")
+        KafkaTemplate<Long, LinkUpdateEvent> kafkaTemplate = mock(KafkaTemplate.class);
+        KafkaTopicsProperties topics = new KafkaTopicsProperties();
+        topics.setLinkUpdates("link-updates-test");
+
+        when(kafkaTemplate.send(eq("link-updates-test"), eq(1L), any(LinkUpdateEvent.class)))
+                .thenReturn(CompletableFuture.completedFuture(null));
+
+        KafkaLinkUpdateProducer producer = new KafkaLinkUpdateProducer(kafkaTemplate, topics);
+        LinkUpdateRequest update =
+                new LinkUpdateRequest(1L, URI.create("https://example.com"), "test description", List.of(123L));
 
         producer.send(update);
+        ArgumentCaptor<LinkUpdateEvent> eventCaptor = ArgumentCaptor.forClass(LinkUpdateEvent.class);
+        verify(kafkaTemplate).send(eq("link-updates-test"), eq(1L), eventCaptor.capture());
 
-        Properties props = new Properties();
-        props.put(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, kafka.getBootstrapServers());
-        props.put(ConsumerConfig.GROUP_ID_CONFIG, "test-group");
-        props.put(ConsumerConfig.AUTO_OFFSET_RESET_CONFIG, "earliest");
-        props.put(ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG, LongDeserializer.class);
-        props.put(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class);
-
-        try (KafkaConsumer<Long, String> consumer = new KafkaConsumer<>(props)) {
-            consumer.subscribe(List.of("link-updates-test"));
-
-            ConsumerRecords<Long, String> records =
-                consumer.poll(Duration.ofSeconds(10));
-
-            assertThat(records.count()).isEqualTo(1);
-
-            ConsumerRecord<Long, String> record = records.iterator().next();
-
-            assertThat(record.key()).isEqualTo(1L);
-            assertThat(record.value()).contains("https://example.com");
-        }
+        LinkUpdateEvent captured = eventCaptor.getValue();
+        assertThat(captured.getId()).isEqualTo(1L);
+        assertThat(captured.getUrl().toString()).isEqualTo("https://example.com");
+        assertThat(captured.getDescription().toString()).isEqualTo("test description");
+        assertThat(captured.getTgChatIds().getFirst()).isEqualTo(123L);
     }
 }

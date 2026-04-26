@@ -28,8 +28,7 @@ public class OutboxPublisher {
     @Scheduled(fixedDelayString = "${app.outbox.poll-interval}")
     @Transactional
     public void publish() {
-        List<OutboxMessage> messages =
-            outboxRepository.findNewMessages(properties.batchSize());
+        List<OutboxMessage> messages = outboxRepository.findNewMessages(properties.batchSize());
 
         for (OutboxMessage message : messages) {
             publishOne(message);
@@ -38,26 +37,22 @@ public class OutboxPublisher {
 
     private void publishOne(OutboxMessage message) {
         try {
-            LinkUpdateRequest request =
-                objectMapper.readValue(message.payload(), LinkUpdateRequest.class);
+            LinkUpdateRequest request = objectMapper.readValue(message.payload(), LinkUpdateRequest.class);
 
-            kafkaTemplate.send(
-                message.topic(),
-                Long.valueOf(message.messageKey()),
-                request
-            ).whenComplete((result, ex) -> {
-                if (ex == null) {
-                    outboxRepository.markSent(message.id());
-                    log.info(
-                        "Outbox message sent. id={}, topic={}, offset={}",
-                        message.id(),
-                        message.topic(),
-                        result.getRecordMetadata().offset()
-                    );
-                } else {
-                    handleFailure(message, ex);
-                }
-            });
+            kafkaTemplate
+                    .send(message.topic(), Long.valueOf(message.messageKey()), request)
+                    .whenComplete((result, ex) -> {
+                        if (ex == null) {
+                            outboxRepository.markSent(message.id());
+                            log.info(
+                                    "Outbox message sent. id={}, topic={}, offset={}",
+                                    message.id(),
+                                    message.topic(),
+                                    result.getRecordMetadata().offset());
+                        } else {
+                            handleFailure(message, ex);
+                        }
+                    });
 
         } catch (Exception e) {
             handleFailure(message, e);

@@ -1,6 +1,5 @@
 package backend.academy.linktracker.scrapper.configuration.properties;
 
-import jakarta.validation.constraints.NotEmpty;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -18,5 +17,3 @@ public class KafkaTopicsProperties {
 
     private String linkUpdates;
 }
-
-

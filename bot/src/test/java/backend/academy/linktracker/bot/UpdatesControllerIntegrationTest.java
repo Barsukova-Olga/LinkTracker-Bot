@@ -9,6 +9,7 @@ import java.net.URL;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.web.server.LocalServerPort;
+import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 
 @SpringBootTest(
@@ -16,7 +17,8 @@ import org.springframework.test.context.bean.override.mockito.MockitoBean;
         properties = {
             "app.polling.enabled=false",
             "spring.autoconfigure.exclude=" + "org.springframework.boot.jdbc.autoconfigure.DataSourceAutoConfiguration,"
-                    + "org.springframework.boot.hibernate.autoconfigure.HibernateJpaAutoConfiguration"
+                    + "org.springframework.boot.hibernate.autoconfigure.HibernateJpaAutoConfiguration,"
+                    + "org.springframework.boot.kafka.autoconfigure.KafkaAutoConfiguration"
         })
 class UpdatesControllerIntegrationTest {
 
@@ -25,6 +27,9 @@ class UpdatesControllerIntegrationTest {
 
     @MockitoBean
     private TelegramBot telegramBot;
+
+    @MockitoBean
+    private KafkaTemplate<Object, Object> kafkaTemplate;
 
     @Test
     void validUpdateRequestReturns200() throws Exception {

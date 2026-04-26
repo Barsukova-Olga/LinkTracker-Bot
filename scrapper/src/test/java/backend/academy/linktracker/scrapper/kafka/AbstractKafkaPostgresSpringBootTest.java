@@ -15,9 +15,7 @@ import org.testcontainers.utility.DockerImageName;
 public abstract class AbstractKafkaPostgresSpringBootTest extends AbstractPostgresSpringBootTest {
 
     @Container
-    static KafkaContainer kafka = new KafkaContainer(
-        DockerImageName.parse("apache/kafka:3.7.0")
-    );
+    static KafkaContainer kafka = new KafkaContainer(DockerImageName.parse("apache/kafka:3.7.0"));
 
     @DynamicPropertySource
     static void configureKafkaProperties(DynamicPropertyRegistry registry) {
@@ -25,15 +23,14 @@ public abstract class AbstractKafkaPostgresSpringBootTest extends AbstractPostgr
 
         registry.add("app.kafka.topics.link-updates", () -> "link-updates-test");
 
-        registry.add("spring.kafka.producer.key-serializer",
-            () -> "org.apache.kafka.common.serialization.LongSerializer");
-        registry.add("spring.kafka.producer.value-serializer",
-            () -> "org.springframework.kafka.support.serializer.JsonSerializer");
-        registry.add("spring.kafka.producer.properties.spring.json.add.type.headers",
-            () -> "false");
+        registry.add(
+                "spring.kafka.producer.key-serializer", () -> "org.apache.kafka.common.serialization.LongSerializer");
+        registry.add(
+                "spring.kafka.producer.value-serializer",
+                () -> "org.springframework.kafka.support.serializer.JsonSerializer");
+        registry.add("spring.kafka.producer.properties.spring.json.add.type.headers", () -> "false");
 
         registry.add("app.message-transport", () -> "kafka");
         registry.add("app.schedule.enabled", () -> "false");
-
     }
 }

@@ -22,7 +22,7 @@ create table if not exists link_tag (
     foreign key (chat_id, link_id) references chat_link(chat_id, link_id) on delete cascade
 );
 
-create table if not existsoutbox_messages (
+create table if not exists outbox_messages (
     id BIGSERIAL PRIMARY KEY,
     topic TEXT NOT NULL,
     message_key TEXT NOT NULL,

@@ -7,9 +7,9 @@ import backend.academy.linktracker.scrapper.outbox.OutboxService;
 import backend.academy.linktracker.scrapper.repository.ChatLinkRepository;
 import backend.academy.linktracker.scrapper.repository.LinkRepository;
 import jakarta.transaction.Transactional;
+import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
-import java.util.List;
 
 @Service
 @RequiredArgsConstructor
@@ -31,14 +31,8 @@ public class LinkUpdateTransactionService {
         }
 
         outboxService.saveLinkUpdate(
-            kafkaTopicsProperties.getLinkUpdates(),
-            new LinkUpdateRequest(
-                event.linkId(),
-                event.url(),
-                description,
-                chatIds
-            )
-        );
+                kafkaTopicsProperties.getLinkUpdates(),
+                new LinkUpdateRequest(event.linkId(), event.url(), description, chatIds));
 
         return true;
     }
